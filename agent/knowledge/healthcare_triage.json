@@ -1,0 +1,44 @@
+[
+  {
+    "id": "health-001",
+    "title": "Emergency Severity Index (ESI) Triage Algorithm",
+    "vertical": "healthcare",
+    "category": "clinical_triage",
+    "text": "Emergency Severity Index (ESI) 5-Level Triage Protocol: ESI Level 1 (Resuscitation): Immediate life-saving intervention required (unresponsive, intubated, severe respiratory distress, pulseless). ESI Level 2 (Emergent): High-risk situation, confused/lethargic/disoriented, or severe pain/distress (rating >= 7/10). ESI Level 3 (Urgent): Patient requires two or more hospital resources (e.g., labs, IV fluids, CT scan) but vital signs are stable (Heart Rate 60-100, Respiratory Rate 12-20, SpO2 > 92%). ESI Level 4 (Less Urgent): Patient requires one resource (e.g., simple x-ray or suture). ESI Level 5 (Non-Urgent): No resources required (e.g., prescription refill, simple rash evaluation). Guardrail notice: Any patient showing altered mental status, active cyanosis, or stridor must immediately be categorized as Level 1 or 2."
+  },
+  {
+    "id": "health-002",
+    "title": "Acute Coronary Syndrome (ACS) and STEMI Screening Protocol",
+    "vertical": "healthcare",
+    "category": "cardiac_emergencies",
+    "text": "Acute Coronary Syndrome (ACS) Screening and First-Action Protocol: Red flag symptoms: Substernal crushing chest pain radiating to left jaw or arm, diaphoresis, shortness of breath, unexplained nausea/vomiting. Immediate action: Direct caller to rest, call 911 immediately. If conscious and not allergic, instruct to chew 325 mg non-enteric coated aspirin or four 81 mg baby aspirins. Contraindications: Do NOT administer nitroglycerin if patient has taken PDE-5 inhibitors (sildenafil/Viagra within 24h, tadalafil/Cialis within 48h) due to fatal refractory hypotension risk. Keep patient calm and seated until paramedic arrival."
+  },
+  {
+    "id": "health-003",
+    "title": "Cincinnati Prehospital Stroke Scale (FAST) Algorithm",
+    "vertical": "healthcare",
+    "category": "neurological_emergencies",
+    "text": "Cincinnati Prehospital Stroke Scale (FAST): Facial Droop: Have patient smile or show teeth. Abnormal if one side does not move equally. Arm Drift: Have patient close eyes and hold both arms straight out for 10 seconds. Abnormal if one arm drifts down compared to other. Speech: Have patient repeat 'The sky is blue in Cincinnati'. Abnormal if slurred, inappropriate words, or unable to speak. Time: Determine exact 'Last Known Well' (LKW) time. Intravenous thrombolysis (Alteplase/Tenecteplase) therapeutic window is strictly within 4.5 hours of LKW, and mechanical thrombectomy up to 24 hours for large vessel occlusions. Immediate Code Stroke activation required."
+  },
+  {
+    "id": "health-004",
+    "title": "Anaphylaxis Recognition and Epinephrine Auto-Injector Administration",
+    "vertical": "healthcare",
+    "category": "allergy_immunology",
+    "text": "Anaphylaxis Emergency Management: Diagnostic criteria: Acute onset of skin/mucosal symptoms (hives, pruritus, swollen lips/tongue) PLUS respiratory compromise (dyspnea, wheezing, stridor) OR hypotension (systolic BP < 90 mmHg). First-line treatment: Epinephrine 1:1000 (1 mg/mL) administered Intramuscularly (IM) into anterolateral mid-thigh. Adult dose: 0.3 mg to 0.5 mg IM. Pediatric dose (<30 kg): 0.15 mg IM. May repeat dose every 5 to 15 minutes if symptoms persist. Position patient supine with legs elevated; never allow patient to stand abruptly. Antihistamines and corticosteroids are second-line and must never delay epinephrine."
+  },
+  {
+    "id": "health-005",
+    "title": "HIPAA Privacy Rule, Protected Health Information (PHI), and Consent",
+    "vertical": "healthcare",
+    "category": "compliance_privacy",
+    "text": "HIPAA Compliance and Patient Privacy Guardrails: Protected Health Information (PHI) encompasses 18 distinct identifiers including patient full name, date of birth, Social Security Number, medical record number, email, and health plan numbers. Minimum Necessary Rule: Disclose only the minimum amount of PHI required to accomplish the intended healthcare task. Patient consent must be verified before releasing records to third parties. Exceptions apply only for treatment, payment, healthcare operations (TPO), or mandatory public health reporting (communicable disease outbreak, elder/child abuse). Never transmit unencrypted PHI over public channels."
+  },
+  {
+    "id": "health-006",
+    "title": "Insurance Verification, Prior Authorization, and Copay Guidelines",
+    "vertical": "healthcare",
+    "category": "billing_operations",
+    "text": "Insurance Prior Authorization & Outpatient Scheduling SOP: HMO vs PPO workflows: HMO plans require valid primary care physician (PCP) referral on file prior to specialist consultation. PPO plans allow direct specialist booking subject to in-network deductible verification. High-cost diagnostic procedures (MRI, PET, specialty biologics) require Prior Authorization (PA) submission to payer with clinical notes and ICD-10/CPT codes. Allow 72 hours for standard PA review, 24 hours for urgent clinical determinations. Inform patient of co-insurance and remaining in-network annual deductible prior to appointment confirmation."
+  }
+]

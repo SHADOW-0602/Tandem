@@ -1,0 +1,25 @@
+{
+  "name": "tandem-sub10ms-voice-agents",
+  "version": "1.0.0",
+  "description": "Sub-10ms Context Retrieval Voice Agents powered by Moss, LiveKit, Next.js, Python, and FastAPI",
+  "private": true,
+  "scripts": {
+    "dev:server": "python -m uvicorn server.main:app --port 8000 --reload",
+    "dev:agent": "python -m agent.worker dev",
+    "dev:web": "npm --prefix web run dev",
+    "build:indexes": "python -m agent.build_indexes",
+    "test:python": "pytest tests/ -v",
+    "test": "npm run test:python"
+  },
+  "keywords": [
+    "livekit",
+    "moss",
+    "sub-10ms",
+    "voice-agents",
+    "groq",
+    "fastapi",
+    "nextjs"
+  ],
+  "author": "Kushagra Singh",
+  "license": "MIT"
+}

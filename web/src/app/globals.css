@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0e0e13;
+  --foreground: #fffaea;
+  --color-cream: #efebdd;
+  --color-mint: #9acdbf;
+  --color-mint-bright: #62f6b5;
+  --color-card: #111013;
+  --color-surface: #1f1f23;
+  --color-border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Minimal sleek dark scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #0e0e13;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Card gradients and glass surfaces */
+.td-card {
+  background-color: #111013;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.td-card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.td-card-hover:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background-color: #141318;
+}
+
+/* Glass navigation bar */
+.td-nav {
+  background: rgba(14, 14, 19, 0.82);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Pulse glow for sub-10ms badge */
+@keyframes sub10Pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(98, 246, 181, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(98, 246, 181, 0.75);
+  }
+}
+
+.glow-sub10 {
+  animation: sub10Pulse 2.4s infinite ease-in-out;
+}

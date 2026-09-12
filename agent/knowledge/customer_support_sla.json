@@ -1,0 +1,44 @@
+[
+  {
+    "id": "supp-001",
+    "title": "Enterprise Service Level Agreement (SLA) & Incident Priorities",
+    "vertical": "customer_support",
+    "category": "sla_escalation",
+    "text": "Enterprise Support Incident Priority Matrix and Response SLAs: Priority 0 (Critical Outage / Service Down): Core SaaS platform unavailable for more than 20% of users, data corruption, or payment processing failure. Initial response time: Strictly within 15 minutes 24/7/365. Executive bridge established, status page update every 30 minutes. Priority 1 (High Impact / Severe Degradation): Major workflow impaired with no viable workaround, API latency > 3000ms. Response time: within 1 hour. Priority 2 (Medium / Feature Impaired): Bug affects single non-critical workflow; workaround available. Response time: within 4 business hours. Priority 3 (Low / Informational): General billing questions, minor cosmetic UI defect, feature request. Response time: within 1 business day."
+  },
+  {
+    "id": "supp-002",
+    "title": "Subscription Billing, Refund Thresholds, and Chargeback Policy",
+    "vertical": "customer_support",
+    "category": "billing_finance",
+    "text": "Billing Operations and Refund Guidelines: Frontline agents are authorized to issue immediate discretionary refunds up to $500.00 USD per account within a 12-month trailing window for verified billing discrepancies, accidental duplicate annual renewals reported within 14 calendar days, or verified platform downtime credits. Refunds exceeding $500.00 require Tier-2 Manager approval in Zendesk/Stripe. Chargeback Dispute Policy: When customer initiates credit card chargeback (reason code 10.4 or 4837 Fraud/Unauthorized), freeze subscription renewal immediately, gather IP access logs, contract signature, and export usage audit logs for dispute response pack submission within 7 business days."
+  },
+  {
+    "id": "supp-003",
+    "title": "REST API Rate Limiting, HTTP 429 Errors, and Exponential Backoff",
+    "vertical": "customer_support",
+    "category": "api_developer_support",
+    "text": "Developer API Troubleshooting and 429 Rate Limit Resolution: Global API Rate Limits: 10,000 requests per minute per enterprise organization; burst limit 250 requests per second. Response Headers: Look for 'X-RateLimit-Limit', 'X-RateLimit-Remaining', and 'Retry-After' (in seconds). Best practices: Instruct customer engineers to implement truncated exponential backoff with full jitter: Sleep = rand(0, min(max_backoff, base * 2 ^ attempt)). If customer experiences persistent 429 errors despite jitter, audit API keys for multi-threaded polling loops and recommend migrating bulk operations to Webhooks or Streaming WebSockets endpoint."
+  },
+  {
+    "id": "supp-004",
+    "title": "Enterprise SSO, SAML 2.0 Assertion, and SCIM Provisioning",
+    "vertical": "customer_support",
+    "category": "identity_security",
+    "text": "Single Sign-On (SSO) Troubleshooting (Okta, Azure AD, PingFederate): Error 'Invalid SAML Response signature': Inspect x509 signing certificate expiration date in IdP metadata. Download updated IdP certificate and upload to Admin Console. Error 'NameID attribute missing': Verify IdP SAML mapper sends user.email formatted as urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress. SCIM Provisioning (RFC 7644) 401 Unauthorized: SCIM bearer token expires every 180 days; regenerate bearer token in Security Settings and update provisioning connection in Azure AD enterprise app."
+  },
+  {
+    "id": "supp-005",
+    "title": "Multi-Factor Authentication (MFA) Recovery and Security Verification",
+    "vertical": "customer_support",
+    "category": "account_security",
+    "text": "High-Security MFA Reset Procedure: To prevent Account Takeover (ATO) and social engineering attacks, Tier-1 agents are strictly prohibited from bypassing MFA via simple telephone request. Mandatory 3-factor verification: 1) Verify primary account email address; 2) Confirm last 4 digits of billing credit card or invoice ID; 3) Send one-time challenge passcode to backup recovery phone on file. For Enterprise VIP accounts, require organization Domain Administrator written ticket authorization before manual authenticator token reset. All reset actions must be logged in Security Audit Trail."
+  },
+  {
+    "id": "supp-006",
+    "title": "Customer Churn Mitigation and VIP Retention Playbook",
+    "vertical": "customer_support",
+    "category": "customer_success",
+    "text": "VIP Account Retention and Discount Concessions: When an Enterprise client with Annual Contract Value (ACV) > $12,000 requests cancellation due to pricing or reduced team size: 1) Empathize and identify primary friction (budget constraint, lack of adoption, competitor feature parity); 2) Offer tier downgrade with feature freeze rather than full cancellation; 3) Authorized concession: Apply 20% loyalty discount for 6-month contract extension; 4) Offer 60-day billing pause preserving saved workspaces and historical analytics; 5) Schedule immediate 30-minute executive check-in with assigned Customer Success Manager."
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "disp-001",
+    "title": "APCO Standard 10-Codes and Radio Signals",
+    "vertical": "dispatch",
+    "category": "radio_communications",
+    "text": "APCO Ten-Codes and Field Radio Protocol: 10-4 Acknowledged/Message Received; 10-6 Busy unless urgent; 10-7 Out of service; 10-8 In service/available; 10-9 Repeat last transmission; 10-19 Return to station; 10-20 Location requested; 10-23 Arrived at scene; 10-33 Emergency traffic only - hold all non-urgent transmissions; 10-50 Motor vehicle accident (10-50PD Property Damage, 10-50PI Personal Injury, 10-50F Fatal); 10-76 En route; 10-97 Arrived on scene; 10-99 Officer in distress / immediate emergency backup requested. Signal 13 signifies urgent officer assistance needed. Always confirm unit number, exact cross streets, and status before clearing frequency."
+  },
+  {
+    "id": "disp-002",
+    "title": "Incident Priority Dispatch Matrix and Response Modes",
+    "vertical": "dispatch",
+    "category": "priority_matrix",
+    "text": "Priority Dispatch Response Tiers: Code 1 (Routine Response): Normal traffic rules, no emergency lights or siren. Used for cold reports, delayed property theft, public assistance. Code 2 (Urgent Response): Rapid response without siren, emergency lights at intersections where permitted. Used for escalating verbal disputes, in-progress trespass, high-priority property crime. Code 3 (Emergency Lights and Sirens): Immediate life hazard, actively violent felonies, structural fire, CPR in progress, officer distress. Dispatch authorizes maximum available nearest units. Maximum speed must not exceed department safe driving limits (typically +15 mph over posted limit). Cancel Code 3 immediately once scene is stabilized or verified non-emergency."
+  },
+  {
+    "id": "disp-003",
+    "title": "HAZMAT Emergency Response Guidebook (ERG) Initial Isolation Distances",
+    "vertical": "dispatch",
+    "category": "hazardous_materials",
+    "text": "HAZMAT ERG Initial Isolation Distances and Protocols: Guide 128 (Flammable Liquids - Gasoline DOT 1203, Diesel DOT 1202): Isolate spill area minimum 50 meters (150 feet) in all directions. For large tank fire, isolate 800 meters (1/2 mile) in all directions. Guide 115 (Gases - Flammable / LPG Propane DOT 1075): Isolate minimum 100 meters (330 feet); for tanker rupture threat, evacuate 1,600 meters (1 mile). Guide 124 (Toxic Gases - Chlorine DOT 1017): Immediate downwind evacuation 1.5 to 3 miles. Dispatch rules: Stage responding units UPWIND and UPHILL. Request Chemtrec notification at 1-800-424-9300. Never position command post downwind of vapor cloud."
+  },
+  {
+    "id": "disp-004",
+    "title": "Tactical Active Threat and Perimeter Containment SOP",
+    "vertical": "dispatch",
+    "category": "tactical_operations",
+    "text": "Active Violent Incident and Perimeter Protocol: Contact Team concept: Initial responding officers (1 to 4) form immediate contact team to bypass wounded and neutralize active threat directly. Rescue Task Force (RTF): Paramedics enter Warm Zone with armed tactical escort only after initial contact team pushes threat into containment. Dispatcher tasks: 1) Initiate city-wide emergency broadcast; 2) Lock frequency for priority traffic; 3) Establish Inner Perimeter (containment of building/structure) and Outer Perimeter (crowd control, media line, EMS triage staging at safe distance); 4) Notify SWAT and Critical Incident Negotiation Team (CINT); 5) Dispatch air support and emergency medical mutual aid."
+  },
+  {
+    "id": "disp-005",
+    "title": "Vehicle Pursuit Intervention and PIT Maneuver Authorization",
+    "vertical": "dispatch",
+    "category": "pursuit_policy",
+    "text": "High-Speed Pursuit and PIT Authorization SOP: Pursuits are authorized ONLY for violent felonies posing imminent danger to human life. Pursuits for property crime, traffic infractions, or stolen vehicles without violence are strictly prohibited. Shift Supervisor maintains sole authority to authorize or terminate pursuit. Maximum two chase vehicles plus supervisor trailing. Precision Immobilization Technique (PIT) rules: Permitted only at speeds under 35 mph unless deadly force is justified. Prohibited against motorcycles, ATVs, heavily loaded hazardous cargo vehicles, or near pedestrian crowds or bridge abutments. Terminate pursuit immediately if environmental hazards (fog, heavy school zone traffic) outweigh apprehension necessity."
+  },
+  {
+    "id": "disp-006",
+    "title": "Mutual Aid and Inter-Agency Radio Frequency Coordination",
+    "vertical": "dispatch",
+    "category": "interagency_coordination",
+    "text": "Inter-Agency Interoperability: When incident scales beyond single municipal jurisdiction, dispatch activates Mutual Aid Box Alarm System (MABAS) or State Mutual Aid Plan. Patch primary talkgroup to Statewide Interoperable Radio Network (VHF 155.475 MHz VCALL, 800 MHz TAC-1 through TAC-4). Designate dedicated staging area manager on Staging Channel. Ensure responding neighboring agencies switch to assigned incident tactical talkgroup before entering operational perimeter."
+  }
+]

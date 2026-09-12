@@ -1,0 +1,44 @@
+[
+  {
+    "id": "field-001",
+    "title": "OSHA 1910.147 Lockout/Tagout (LOTO) 6-Step Protocol",
+    "vertical": "field_worker",
+    "category": "safety_standards",
+    "text": "OSHA 29 CFR 1910.147 Control of Hazardous Energy (Lockout/Tagout) Mandatory 6-Step Sequence: Step 1 (Preparation): Identify all energy sources (electrical, hydraulic, pneumatic, mechanical, thermal, gravitational) and magnitude. Notify affected personnel. Step 2 (Shutdown): Power down equipment using standard operational stopping procedures. Step 3 (Isolation): Operate disconnect switches, circuit breakers, or block valves to isolate machine from incoming energy. Step 4 (Lock and Tag Application): Apply standardized personal lockout devices and danger warning tags to all energy isolating points. Step 5 (Stored Energy Dissipation): Bleed residual hydraulic pressure, relieve pneumatic lines, discharge high-voltage capacitor banks, and block elevated mechanical parts against gravity. Step 6 (Zero Energy Verification): Attempt restart via local controls to verify complete zero-energy state, test electrical circuits with calibrated multimeter (Live-Dead-Live test), then return control to off position."
+  },
+  {
+    "id": "field-002",
+    "title": "Caterpillar & Cummins Heavy Diesel Engine Diagnostic Codes",
+    "vertical": "field_worker",
+    "category": "engine_diagnostics",
+    "text": "Heavy Equipment Engine Fault Codes (SAE J1939 SPN/FMI Matrix): SPN 100 / FMI 1: Low Engine Oil Pressure - stop engine immediately to prevent crankshaft seizure; check oil level and pressure transducer. SPN 110 / FMI 0: High Engine Coolant Temperature (>225°F/107°C) - reduce load, idle engine, check radiator airflow and coolant level, do not open hot radiator cap. SPN 190 / FMI 0: Engine Overspeed condition (>2600 RPM) - check throttle actuator linkage and turbocharger seal failure. SPN 102 / FMI 2: Turbocharger Intake Manifold Pressure erratic - inspect boost air hoses for clamp detachment or split intercooler cores. SPN 3251 / FMI 0: DPF Differential Pressure Extremely High - initiate stationary parked regeneration or remove soot filter for ultrasonic bake cleaning."
+  },
+  {
+    "id": "field-003",
+    "title": "Commercial HVAC/R Refrigeration Cycle and Superheat Calculations",
+    "vertical": "field_worker",
+    "category": "hvac_refrigeration",
+    "text": "Commercial HVAC/R Diagnostics and Superheat/Subcooling Procedures: Target Superheat: Used for fixed orifice systems. Target Superheat = (3 * Indoor Wet Bulb - 80 - Outdoor Dry Bulb) / 2. Actual Superheat = Suction Line Temperature minus Suction Saturation Temperature (from gauge pressure via PT chart). Target Subcooling: Used for Thermal Expansion Valve (TXV) systems (typically 10°F to 14°F). Actual Subcooling = Liquid Saturation Temperature minus Liquid Line Temperature. High superheat + low subcooling indicates undercharge. Low superheat + high subcooling indicates overcharge. High superheat + high subcooling indicates liquid line restriction or clogged filter drier."
+  },
+  {
+    "id": "field-004",
+    "title": "NFPA 70E Electrical Arc Flash Boundaries and PPE Categories",
+    "vertical": "field_worker",
+    "category": "electrical_safety",
+    "text": "NFPA 70E Standard for Electrical Safety in the Workplace: Approach Boundaries for 480V 3-Phase Systems: Limited Approach Boundary is 3 feet 6 inches (only qualified workers or escorted unqualified workers). Restricted Approach Boundary is 12 inches (qualified workers with insulating rubber gloves and tools only). Arc Flash Boundary: Distance where incident energy drops to 1.2 cal/cm2 (second-degree burn threshold). Arc Flash PPE Categories: Category 1 (minimum 4 cal/cm2 AR shirt/pants); Category 2 (minimum 8 cal/cm2 AR clothing with arc-rated face shield and balaclava); Category 3 (minimum 25 cal/cm2 arc flash suit hood); Category 4 (minimum 40 cal/cm2 full arc flash bomb suit). Always verify no voltage across all phases using 1000V CAT IV multimeter."
+  },
+  {
+    "id": "field-005",
+    "title": "Confined Space Entry Permit and Atmospheric Thresholds",
+    "vertical": "field_worker",
+    "category": "confined_space",
+    "text": "Permit-Required Confined Space (PRCS) Entry Checklist (OSHA 1910.146): Pre-entry 4-gas atmospheric testing must be performed in this mandatory order: 1) Oxygen Content (Acceptable range 19.5% to 23.5%); 2) Flammable Gases/Vapors (Must be strictly under 10% Lower Explosive Limit - LEL); 3) Carbon Monoxide (Permissible Exposure Limit under 35 ppm, action limit 25 ppm); 4) Hydrogen Sulfide (Permissible Exposure Limit under 10 ppm, action limit 5 ppm). Testing must sample top, middle, and bottom of space due to differing gas vapor densities. Continuous forced-air ventilation and dedicated outside attendant with tripod harness retrieval winch required at all times."
+  },
+  {
+    "id": "field-006",
+    "title": "Allen-Bradley PLC & Industrial VFD Motor Drive Fault Reset",
+    "vertical": "field_worker",
+    "category": "automation_controls",
+    "text": "Industrial Automation & PowerFlex VFD Diagnostics: Fault F004 (UnderVoltage): DC bus voltage below 400V on 480V drive; inspect AC line fuses and power distribution disconnect. Fault F005 (OverVoltage): DC bus voltage exceeds 810V; caused by rapid deceleration of high-inertia motor load - check dynamic braking resistor continuity and decel ramp time. Fault F007 (Motor Overload): Drive running in current limit; inspect mechanical bearing binding or jammed conveyor. Resetting: Clear motor jam, allow drive thermal cooldown (minimum 5 minutes), navigate to HIM parameter P045, press Clear Fault, test motor jog at 10 Hz before switching to auto DCS control."
+  }
+]

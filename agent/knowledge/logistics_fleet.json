@@ -1,0 +1,30 @@
+[
+  {
+    "id": "log-001",
+    "title": "FMCSA Hours of Service (HOS) Regulations and Electronic Logging Devices",
+    "vertical": "logistics_fleet",
+    "category": "regulatory_compliance",
+    "text": "Federal Motor Carrier Safety Administration (FMCSA) 49 CFR Part 395 Hours of Service: 11-Hour Driving Rule: Property-carrying driver may drive maximum 11 hours after 10 consecutive hours off duty. 14-Hour On-Duty Window: May not drive beyond the 14th consecutive hour after coming on duty, following 10 consecutive hours off duty. Off-duty time does not extend 14-hour period. 30-Minute Rest Break: Driving prohibited if more than 8 consecutive hours have passed without at least 30 consecutive minutes of non-driving status (off-duty, sleeper berth, on-duty not driving). 60/70-Hour Weekly Limit: Cannot drive after 60/70 hours on duty in 7/8 consecutive days. 34-Hour Restart resets weekly cumulative cycle. Any ELD malfunction must be reported within 24 hours and noted on paper log."
+  },
+  {
+    "id": "log-002",
+    "title": "Cold-Chain Temperature Excursion Protocols and FSMA Rules",
+    "vertical": "logistics_fleet",
+    "category": "cold_chain",
+    "text": "Food Safety Modernization Act (FSMA) Sanitary Transportation & Pharma Cold Chain: Frozen goods must maintain continuous air temperature <= 0°F (-18°C). Fresh refrigerated produce & dairy must maintain between 34°F and 38°F (1°C to 3.3°C). Temperature Excursion Protocol: If reefer unit registers continuous temperature > 42°F (5.5°C) for more than 45 minutes: 1) Driver must immediately stop at nearest safe checkpoint; 2) Check reefer fault codes (Carrier Transicold / Thermo King micro-air alarms); 3) Inspect diesel reefer fuel supply and door gaskets; 4) Notify dispatch quality manager; 5) Calibrated probe core-temp testing of pulp must be logged before cargo acceptance."
+  },
+  {
+    "id": "log-003",
+    "title": "Aviation Flight Dispatch, Minimum Equipment List (MEL), and Fuel Reserves",
+    "vertical": "logistics_fleet",
+    "category": "aviation_dispatch",
+    "text": "14 CFR Part 121 Domestic Flight Dispatch and Fuel Requirements: Mandatory Fuel Reserve: Fuel to fly to intended destination airport, plus fuel to fly to most distant alternate airport (if required), plus 45 minutes of reserve fuel at normal cruising consumption. Alternate Airport 1-2-3 Rule: An alternate is required unless for at least 1 hour before and 1 hour after estimated time of arrival, ceiling is at least 2,000 feet above airport elevation, and visibility is at least 3 statute miles. Minimum Equipment List (MEL) rectification intervals: Category A (specified in remarks); Category B (repaired within 3 consecutive calendar days); Category C (repaired within 10 consecutive calendar days); Category D (repaired within 120 calendar days)."
+  },
+  {
+    "id": "log-004",
+    "title": "Commercial Vehicle CVSA Roadside Inspection & Out-of-Service Criteria",
+    "vertical": "logistics_fleet",
+    "category": "fleet_maintenance",
+    "text": "Commercial Vehicle Safety Alliance (CVSA) North American Standard Out-of-Service Criteria: Critical inspection items: Brakes: 20% or more of service brakes defective (pushrod stroke exceeds readjustment limit, missing or broken components) results in immediate vehicle impound/out-of-service. Tires: Steer axle tires with tread groove depth < 4/32 inch, or any other axle tire < 2/32 inch, or visible cord/tread separation. Coupling Devices: Missing or cracked fifth wheel locking pins or loose fasteners. Steering: Play exceeding 2 inches on 18-inch steering wheel. Cargo Securement: Working load limit (WLL) of tiedowns must equal at least 50% of total cargo weight."
+  }
+]

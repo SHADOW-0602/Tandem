@@ -1,0 +1,30 @@
+[
+  {
+    "id": "fin-001",
+    "title": "Bank Secrecy Act (BSA) & Anti-Money Laundering (AML) Reporting",
+    "vertical": "financial_compliance",
+    "category": "aml_bsa",
+    "text": "BSA/AML Financial Intelligence and Transaction Monitoring: Currency Transaction Report (CTR): Mandatory FinCEN Form 112 filing for each deposit, withdrawal, exchange of currency, or other payment involving more than $10,000 in physical cash by or on behalf of one person in a single business day. Aggregation rule applies to multiple transactions conducted across different branches. Structuring Detection: Any pattern of cash transactions just below reporting thresholds (e.g., $9,500 deposits across consecutive days) is illegal under 31 U.S.C. 5324 and requires a Suspicious Activity Report (SAR) filing within 30 calendar days. Staff are strictly prohibited from tipping off the customer regarding SAR investigation."
+  },
+  {
+    "id": "fin-002",
+    "title": "Regulation E (12 CFR Part 1005) Consumer Liability & Dispute Timeline",
+    "vertical": "financial_compliance",
+    "category": "consumer_protection",
+    "text": "Electronic Fund Transfer Act (Regulation E) Consumer Liability Tiers: Notification within 2 business days of learning of lost/stolen debit card: Consumer liability is capped at lesser of $50 or unauthorized amount. Notification after 2 business days but within 60 calendar days of periodic statement transmittal: Consumer liability capped up to $500. Notification after 60 calendar days: Consumer bears unlimited liability for unauthorized transfers occurring after the 60-day window until bank is notified. Investigation timeframe: Institution must investigate and resolve within 10 business days, or issue provisional credit while extending investigation up to 45 calendar days (90 days for new accounts or foreign transactions)."
+  },
+  {
+    "id": "fin-003",
+    "title": "Account Takeover (ATO) & Emergency Fraud Freeze Procedures",
+    "vertical": "financial_compliance",
+    "category": "fraud_security",
+    "text": "Emergency Card & Account Freeze Protocol: Triggers for immediate temporary hold: Multiple failed biometric/PIN attempts, simultaneous login attempts from conflicting geographical IP ranges (impossible speed of travel), or unauthorized phone number/SIM swap porting alerts. Actions: 1) Place immediate debit card temporary lock preventing ATM and POS withdrawals; 2) Invalidate active online banking session tokens; 3) Initiate out-of-band identity verification via verified voice biometric or branch photo ID presentation; 4) Reissue chip card with randomized CVV; 5) File internal fraud case with device fingerprint hash and timestamp."
+  },
+  {
+    "id": "fin-004",
+    "title": "High-Value Wire Transfer Dual-Authorization & OFAC Screening",
+    "vertical": "financial_compliance",
+    "category": "wire_operations",
+    "text": "Commercial Wire Transfer Security & Sanctions Compliance: Outbound wire transfers exceeding $25,000 USD require dual-control verification (Operator entry + Supervisor authorization). Real-time Office of Foreign Assets Control (OFAC) screening: Every beneficiary name, routing transit number, and intermediary bank must be matched against the Specially Designated Nationals (SDN) and Blocked Persons list. Potential OFAC false positive matches must be held in compliance review queue; funds cannot be transferred or returned to sender without Compliance Officer sign-off. Callback verification is mandatory for any beneficiary account alteration requested via email or telephone."
+  }
+]

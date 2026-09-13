@@ -6,7 +6,15 @@ import gradio as gr
 def run_agent_worker():
     """Runs the LiveKit agent worker in the background."""
     print("Starting Tandem Voice Agent worker...")
-    subprocess.run(["python", "-m", "agent.worker", "start"])
+    # Pre-download FastEmbed model once in the main thread
+    try:
+        from fastembed import TextEmbedding
+        print("Prewarming FastEmbed ONNX model...")
+        _ = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+    except Exception as e:
+        print(f"FastEmbed prewarm notice: {e}")
+
+    subprocess.run(["python", "-m", "agent.worker", "start", "--num-idle-processes", "1"])
 
 # Start the LiveKit voice agent daemon in a background thread
 thread = threading.Thread(target=run_agent_worker, daemon=True)

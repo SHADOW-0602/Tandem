@@ -1,4 +1,16 @@
+---
+title: Tandem Voice Agent
+emoji: 🎙️
+colorFrom: green
+colorTo: indigo
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+---
+
 # Tandem — Sub-10ms Context Retrieval Voice Agents
+
 ### Ultra-Low Latency Conversational Voice AI with Self-Updating Zero-Trust Knowledge
 
 > **Core Stack:** Moss (`moss-agent`) & Local Embedded Qdrant (`fastembed`), LiveKit Cloud & Agents SDK (Python), Next.js 14, FastAPI, Groq LPU (Llama 3.1/3.3), Groq Whisper Turbo STT, Cartesia Sonic TTS, OpenTelemetry, Neon PostgreSQL.

@@ -23,6 +23,12 @@ VERTICAL_METADATA = {
             "Officer down on scene, Signal 13, need immediate assistance",
         ],
         "latency_target_ms": 590,
+        "character": {
+            "name": "Commander Vance",
+            "title": "Tactical CAD & Emergency Dispatch Lead",
+            "callsign": "VANCE-01",
+            "quote": "Hold your perimeter. Backup coordinates inbound.",
+        },
     },
     "healthcare": {
         "id": "healthcare",
@@ -37,6 +43,12 @@ VERTICAL_METADATA = {
             "What is the adult intramuscular dose for epinephrine in anaphylaxis?",
         ],
         "latency_target_ms": 590,
+        "character": {
+            "name": "Dr. Maya Lin",
+            "title": "Chief Clinical Triage Specialist",
+            "callsign": "MED-TRIAGE",
+            "quote": "Airway, breathing, circulation first. Let's stabilize right now.",
+        },
     },
     "field_worker": {
         "id": "field_worker",
@@ -51,6 +63,12 @@ VERTICAL_METADATA = {
             "What are the 4-gas atmospheric limits for confined space entry?",
         ],
         "latency_target_ms": 590,
+        "character": {
+            "name": "Axel Miller",
+            "title": "Lead Industrial Safety Foreman",
+            "callsign": "OSHA-RIG",
+            "quote": "Verify zero energy state before you touch a single breaker.",
+        },
     },
     "customer_support": {
         "id": "customer_support",
@@ -65,6 +83,12 @@ VERTICAL_METADATA = {
             "Customer is getting HTTP 429 errors on the REST API, how to troubleshoot?",
         ],
         "latency_target_ms": 590,
+        "character": {
+            "name": "Elena Frost",
+            "title": "Executive SLA & Escalations Concierge",
+            "callsign": "SLA-CORE",
+            "quote": "Consider your issue prioritized. I'm handling the fix directly.",
+        },
     },
     "logistics_fleet": {
         "id": "logistics_fleet",
@@ -79,6 +103,12 @@ VERTICAL_METADATA = {
             "What is the alternate airport fuel reserve requirement under Part 121?",
         ],
         "latency_target_ms": 590,
+        "character": {
+            "name": "Captain Sarah Cross",
+            "title": "Global Logistics & Aviation Controller",
+            "callsign": "NAV-AIR",
+            "quote": "Clear skies or rough turbulence, cargo stays protected.",
+        },
     },
     "financial_compliance": {
         "id": "financial_compliance",
@@ -93,6 +123,12 @@ VERTICAL_METADATA = {
             "Customer reports unauthorized debit transactions, what is the emergency freeze protocol?",
         ],
         "latency_target_ms": 590,
+        "character": {
+            "name": "Marcus Sterling",
+            "title": "Principal Fraud & AML Special Agent",
+            "callsign": "BSA-AUDIT",
+            "quote": "Flag the suspicious pattern and enforce immediate account shielding.",
+        },
     },
 }
 

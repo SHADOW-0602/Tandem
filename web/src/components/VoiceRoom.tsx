@@ -6,10 +6,13 @@ import {
   RoomAudioRenderer,
   useConnectionState,
   useLocalParticipant,
+  useRoomContext,
 } from "@livekit/components-react";
-import { ConnectionState } from "livekit-client";
-import { Mic, MicOff, PhoneOff, Radio, Volume2, Zap } from "lucide-react";
+import { ConnectionState, RoomEvent } from "livekit-client";
+import { Mic, MicOff, PhoneOff, Radio, Volume2, Zap, AudioLines, Shield } from "lucide-react";
 import { TurnTelemetry } from "@/lib/types";
+import { CharacterAvatar } from "./CharacterAvatar";
+import { getAgentCharacter } from "@/lib/personas";
 
 interface VoiceRoomProps {
   token: string | null;
@@ -53,16 +56,55 @@ const VoiceRoomInner: React.FC<{
   onTelemetryReceived: (telemetry: TurnTelemetry) => void;
   activeVertical: string;
 }> = ({ onDisconnect, onTelemetryReceived, activeVertical }) => {
+  const room = useRoomContext();
   const connectionState = useConnectionState();
-  const { localParticipant } = useLocalParticipant();
-  const [isMuted, setIsMuted] = useState(false);
+  const { localParticipant, isMicrophoneEnabled } = useLocalParticipant();
+  const [liveSpeech, setLiveSpeech] = useState<string>("");
+
+  // Ensure microphone is enabled upon WebRTC connection
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected && localParticipant && !isMicrophoneEnabled) {
+      localParticipant.setMicrophoneEnabled(true).catch((err) => {
+        console.warn("Failed to auto-enable microphone on connect:", err);
+      });
+    }
+  }, [connectionState, localParticipant, isMicrophoneEnabled]);
+
+  // Listen to WebRTC Data Channel packets broadcasted by Tandem Voice Agent
+  useEffect(() => {
+    if (!room) return;
+
+    const handleDataReceived = (payload: Uint8Array) => {
+      try {
+        const text = new TextDecoder().decode(payload);
+        const data = JSON.parse(text);
+        if (data.type === "telemetry" && data.payload) {
+          onTelemetryReceived(data.payload as TurnTelemetry);
+          setLiveSpeech("");
+        } else if (data.type === "live_user_speech" && data.payload) {
+          const spokenText = data.payload.text || "";
+          setLiveSpeech(spokenText);
+          if (data.payload.is_final) {
+            setTimeout(() => {
+              setLiveSpeech((prev) => (prev === spokenText ? "" : prev));
+            }, 3000);
+          }
+        }
+      } catch (err) {
+        console.debug("Failed to decode data message:", err);
+      }
+    };
+
+    room.on(RoomEvent.DataReceived, handleDataReceived);
+    return () => {
+      room.off(RoomEvent.DataReceived, handleDataReceived);
+    };
+  }, [room, onTelemetryReceived]);
 
   // Toggle Microphone
   const toggleMic = async () => {
     if (localParticipant) {
-      const nextState = !isMuted;
-      await localParticipant.setMicrophoneEnabled(!nextState);
-      setIsMuted(nextState);
+      await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
     }
   };
 
@@ -70,48 +112,65 @@ const VoiceRoomInner: React.FC<{
   const triggerBargeIn = async () => {
     if (localParticipant) {
       await localParticipant.setMicrophoneEnabled(true);
-      setIsMuted(false);
       const payload = JSON.stringify({ type: "barge_in", reason: "user_interrupted" });
       await localParticipant.publishData(new TextEncoder().encode(payload), { reliable: true });
     }
   };
 
+  const isSpeaking = localParticipant?.isSpeaking || false;
+
+  const character = getAgentCharacter(activeVertical);
+
   return (
     <div className="bg-[#111013] border border-white/[0.08] rounded-xl p-5 shadow-2xl relative overflow-hidden">
-      {/* Visual Ambient Mint Glow */}
-      <div className="absolute top-0 right-1/4 w-48 h-48 bg-[#62f6b5]/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Visual Ambient Persona Glow */}
+      <div
+        className="absolute top-0 right-1/4 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-20"
+        style={{ backgroundColor: character.accentColor }}
+      />
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Connection & Status info in Tandem Style */}
-        <div className="flex items-center space-x-3.5">
-          <div className="relative">
-            <div
-              className={`w-11 h-11 rounded-lg flex items-center justify-center transition-colors ${
-                connectionState === ConnectionState.Connected
-                  ? "bg-[#0d241e] text-[#62f6b5] border border-[#62f6b5]/40"
-                  : "bg-amber-950/30 text-amber-300 border border-amber-500/40 animate-pulse"
-              }`}
-            >
-              <Radio className="w-5 h-5" />
-            </div>
-            {connectionState === ConnectionState.Connected && (
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#62f6b5] border-2 border-[#111013] rounded-full" />
-            )}
-          </div>
+        {/* Character Card & Status info */}
+        <div className="flex items-center space-x-4">
+          <CharacterAvatar
+            verticalId={activeVertical}
+            size="lg"
+            isSpeaking={isSpeaking || connectionState === ConnectionState.Connected}
+            showBadge={true}
+          />
 
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="text-sm font-semibold text-[#fffaea]">
-                {connectionState === ConnectionState.Connected
-                  ? "Full-Duplex Voice Session Active"
-                  : "Connecting WebRTC Transport..."}
+              <h3 className="text-base font-bold text-[#fffaea] flex items-center gap-2">
+                <span>{character.characterName}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded font-semibold border border-white/10"
+                  style={{
+                    backgroundColor: `${character.accentColor}18`,
+                    color: character.accentColor,
+                  }}
+                >
+                  {character.callsign}
+                </span>
               </h3>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1f1f23] border border-white/[0.08] text-[#9acdbf]">
-                LiveKit SFU
+                {connectionState === ConnectionState.Connected
+                  ? isSpeaking
+                    ? "Audio Active"
+                    : "Listening"
+                  : "Connecting"}
               </span>
             </div>
+
             <p className="text-xs text-[#a1a1aa] mt-0.5">
-              Domain: <span className="text-[#fffaea] font-medium uppercase">{activeVertical}</span> &bull; Silero VAD Barge-in active &bull; Sub-10ms Moss+Qdrant
+              <span className="text-white font-medium">{character.roleTitle}</span>
+              <span className="mx-1.5">&bull;</span>
+              <span className={isMicrophoneEnabled ? "text-[#62f6b5]" : "text-amber-400"}>
+                {isMicrophoneEnabled ? "Microphone Live" : "Mic Muted"}
+              </span>
+            </p>
+
+            <p className="text-[11px] text-[#71717a] italic mt-1 line-clamp-1">
+              {character.quote}
             </p>
           </div>
         </div>
@@ -122,13 +181,13 @@ const VoiceRoomInner: React.FC<{
           <button
             onClick={toggleMic}
             className={`px-3.5 py-2 rounded-lg border text-xs font-medium flex items-center space-x-1.5 transition-all ${
-              isMuted
+              !isMicrophoneEnabled
                 ? "bg-amber-950/30 border-amber-500/40 text-amber-300"
                 : "bg-white/[0.06] hover:bg-white/[0.1] border-white/[0.08] text-[#fffaea]"
             }`}
           >
-            {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-[#62f6b5]" />}
-            <span>{isMuted ? "Unmute" : "Mute"}</span>
+            {!isMicrophoneEnabled ? <MicOff className="w-4 h-4 text-amber-400" /> : <Mic className="w-4 h-4 text-[#62f6b5]" />}
+            <span>{!isMicrophoneEnabled ? "Unmute Mic" : "Mute Mic"}</span>
           </button>
 
           {/* Instant Barge-In (Tandem Primary Action) */}
@@ -148,6 +207,40 @@ const VoiceRoomInner: React.FC<{
             <PhoneOff className="w-4 h-4" />
             <span>Hang Up</span>
           </button>
+        </div>
+      </div>
+
+      {/* Real-time Subtitle / Teleprompter Bar (Approach 1: Server-Side STT Data Channel) */}
+      <div className="mt-4 pt-3.5 border-t border-white/[0.06] flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="relative flex h-2 w-2">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+              liveSpeech ? "bg-[#62f6b5] opacity-75" : "bg-zinc-600"
+            }`} />
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${
+              liveSpeech ? "bg-[#62f6b5]" : "bg-zinc-600"
+            }`} />
+          </span>
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#9acdbf]">
+            Live Speech
+          </span>
+        </div>
+
+        <div className="flex-1 text-xs font-mono min-h-[22px] flex items-center overflow-hidden">
+          {liveSpeech ? (
+            <p className="text-[#fffaea] font-medium truncate">
+              &ldquo;{liveSpeech}&rdquo;
+              <span className="inline-block w-1.5 h-3.5 ml-1 bg-[#62f6b5] animate-pulse align-middle" />
+            </p>
+          ) : (
+            <p className="text-[#71717a] italic text-[11px] truncate">
+              {connectionState === ConnectionState.Connected
+                ? isSpeaking
+                  ? "Detecting speech & transcribing..."
+                  : "Listening... Speak into your microphone to view live words"
+                : "Connecting..."}
+            </p>
+          )}
         </div>
       </div>
     </div>

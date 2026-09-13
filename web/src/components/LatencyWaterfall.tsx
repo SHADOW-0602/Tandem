@@ -84,9 +84,9 @@ export const LatencyWaterfall: React.FC<LatencyWaterfallProps> = ({
         <div className="p-3 rounded-lg bg-[#0e0e13] border border-white/[0.06] flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] uppercase tracking-wider text-[#a1a1aa] font-medium">
-              1. STT Stream
+              1. Speech to Text
             </span>
-            <span className="text-[9px] text-[#71717a] font-mono">Groq Turbo</span>
+            <span className="text-[9px] text-[#71717a] font-mono">Neural STT</span>
           </div>
           <div className="flex items-baseline space-x-1 my-0.5">
             <span className="text-xl font-bold font-mono text-[#fffaea]">
@@ -97,11 +97,11 @@ export const LatencyWaterfall: React.FC<LatencyWaterfallProps> = ({
           <span className="text-[10px] text-[#71717a]">Audio finalization</span>
         </div>
 
-        {/* Stage 2: MOSS + QDRANT CO-RETRIEVAL (HERO FEATURE) */}
+        {/* Stage 2: CONTEXT RETRIEVAL (HERO FEATURE) */}
         <div className="p-3 rounded-lg bg-[#0d241e]/50 border border-[#62f6b5]/50 shadow-sm shadow-[#62f6b5]/10 flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] uppercase tracking-wider text-[#62f6b5] font-bold">
-              2. Co-Retrieval
+              2. Context Retrieval
             </span>
             <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-[#62f6b5] text-black font-bold">
               SUB-10MS
@@ -113,10 +113,10 @@ export const LatencyWaterfall: React.FC<LatencyWaterfallProps> = ({
             </span>
             <span className="text-[10px] text-[#9acdbf] font-mono">ms</span>
             <span className="text-[10px] text-[#a1a1aa] font-mono ml-1.5">
-              (Qdrant: {qdrant.toFixed(1)}ms)
+              (Vector: {qdrant.toFixed(1)}ms)
             </span>
           </div>
-          <span className="text-[10px] text-[#9acdbf]">Moss Hot Cache + Qdrant</span>
+          <span className="text-[10px] text-[#9acdbf]">Fast Cache + Vector Store</span>
         </div>
 
         {/* Stage 3: LLM TTFT */}
@@ -125,7 +125,7 @@ export const LatencyWaterfall: React.FC<LatencyWaterfallProps> = ({
             <span className="text-[10px] uppercase tracking-wider text-[#a1a1aa] font-medium">
               3. LLM TTFT
             </span>
-            <span className="text-[9px] text-[#71717a] font-mono">Groq LPU</span>
+            <span className="text-[9px] text-[#71717a] font-mono">Language Model</span>
           </div>
           <div className="flex items-baseline space-x-1 my-0.5">
             <span className="text-xl font-bold font-mono text-[#fffaea]">
@@ -142,7 +142,7 @@ export const LatencyWaterfall: React.FC<LatencyWaterfallProps> = ({
             <span className="text-[10px] uppercase tracking-wider text-[#a1a1aa] font-medium">
               4. TTS TTFB
             </span>
-            <span className="text-[9px] text-[#71717a] font-mono">Cartesia Sonic</span>
+            <span className="text-[9px] text-[#71717a] font-mono">Neural Voice</span>
           </div>
           <div className="flex items-baseline space-x-1 my-0.5">
             <span className="text-xl font-bold font-mono text-[#fffaea]">

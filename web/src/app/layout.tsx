@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sub-10ms Voice Agents | Tandem Operations Center",
+  title: "Tandem Operations Center",
   description:
-    "Real-time voice agents powered by Moss, LiveKit Cloud, Next.js, and FastAPI across Field Workers, Healthcare, Dispatch, and Customer Support.",
+    "Real-time voice operations across Field Workers, Healthcare, Dispatch, and Customer Support.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

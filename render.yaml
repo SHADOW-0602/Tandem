@@ -1,0 +1,27 @@
+﻿services:
+  - type: web
+    name: tandem-laravel-api
+    runtime: docker
+    dockerfilePath: backend-laravel/Dockerfile
+    dockerContext: backend-laravel
+    plan: free
+    region: singapore
+    envVars:
+      - key: APP_NAME
+        value: Tandem
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false

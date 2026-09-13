@@ -4,10 +4,11 @@ import logging
 import os
 import sys
 import time
-from typing import Optional
+from typing import Optional, List, Any
 
-from livekit.agents import AgentServer, JobContext, JobProcess
-from livekit.agents.voice import AgentSession, Agent
+from livekit.agents import AgentServer, JobContext, JobProcess, llm
+from livekit.agents.voice import AgentSession, Agent, ConversationItemAddedEvent, UserInputTranscribedEvent
+from livekit.agents.llm.tool_context import StopResponse
 from livekit.plugins import silero, groq
 
 # Optional / Fallback Plugins
@@ -77,6 +78,145 @@ def prewarm(proc: JobProcess) -> None:
 
 server.setup_fnc = prewarm
 
+
+class TandemVoiceAgent(Agent):
+    """Sub-10ms Context Retrieval Voice Agent powered by LiveKit Agents 1.8+."""
+
+    def __init__(
+        self,
+        instructions: str,
+        current_vertical: str,
+        room_name: str,
+        moss_call: Any,
+        room: Any,
+        **kwargs,
+    ):
+        super().__init__(instructions=instructions, **kwargs)
+        self.current_vertical = current_vertical
+        self.room_name = room_name
+        self.moss_call = moss_call
+        self.room = room
+        self.turn_counter = 0
+        self.call_turns: list[str] = []
+        self.current_tracker: Optional[LatencyTracker] = None
+
+    async def broadcast_event(self, event_type: str, payload_data: dict):
+        """Broadcasts a typed packet over WebRTC data channel to dashboard."""
+        try:
+            payload = json.dumps({"type": event_type, "payload": payload_data}).encode("utf-8")
+            await self.room.local_participant.publish_data(payload, reliable=True)
+        except Exception as e:
+            logger.debug(f"Data channel broadcast notice: {e}")
+
+    async def broadcast_telemetry(self, data_dict: dict):
+        """Broadcasts telemetry packet over WebRTC data channel to dashboard."""
+        await self.broadcast_event("telemetry", data_dict)
+
+    async def on_user_turn_completed(
+        self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
+    ) -> None:
+        """Called when caller speech finishes; performs sub-10ms co-retrieval and guardrail intercept."""
+        user_text = new_message.text_content or ""
+        if not user_text.strip():
+            return
+
+        self.turn_counter += 1
+        self.call_turns.append(f"Caller: {user_text}")
+        logger.info(f"[Turn {self.turn_counter}] Caller speech committed: '{user_text}'")
+
+        tracker = LatencyTracker(
+            call_id=self.room_name,
+            vertical=self.current_vertical,
+            turn_id=self.turn_counter,
+        )
+        tracker.mark_stt_final()
+        self.current_tracker = tracker
+
+        # 1. Safety Guardrail evaluation (<1ms)
+        guardrail_match = evaluate_guardrails(self.current_vertical, user_text)
+        if guardrail_match:
+            action, severity, override_msg = guardrail_match
+            logger.warning(f"GUARDRAIL TRIGGERED: [{severity}] {action} -> {override_msg}")
+            tracker.guardrail_action = f"{severity}:{action}"
+
+            # Immediate voice override
+            await self.session.say(override_msg)
+            telemetry = tracker.compute(user_text, override_msg)
+            await self.broadcast_telemetry(telemetry.__dict__)
+            await report_telemetry(telemetry)
+            memory_manager.record_turn(self.room_name, self.turn_counter, user_text, override_msg)
+            self.call_turns.append(f"Tandem (Safety Override): {override_msg}")
+            self.current_tracker = None
+            raise StopResponse()
+
+        # 2. Sub-50ms Edge Domain Classifier (Instant Off-Topic Refusal Bypass)
+        is_in_domain, refusal_msg = classify_edge_domain(self.current_vertical, user_text)
+        if not is_in_domain and refusal_msg:
+            logger.info(f"EDGE REFUSAL BYPASS (<2ms): Deflecting off-domain query: '{user_text}'")
+            tracker.guardrail_action = "EDGE_DOMAIN_REFUSAL_BYPASS"
+            await self.session.say(refusal_msg)
+            telemetry = tracker.compute(user_text, refusal_msg)
+            await self.broadcast_telemetry(telemetry.__dict__)
+            await report_telemetry(telemetry)
+            memory_manager.record_turn(self.room_name, self.turn_counter, user_text, refusal_msg)
+            self.call_turns.append(f"Tandem (Domain Refusal): {refusal_msg}")
+            self.current_tracker = None
+            raise StopResponse()
+
+        # 3. Optional Voice Backchanneling for complex inquiries
+        backchannel_phrase = get_backchannel_phrase(self.current_vertical, user_text)
+        if backchannel_phrase:
+            asyncio.create_task(self.session.say(backchannel_phrase))
+
+        # 4. Multi-Turn Query Rewriting for Context Expansion
+        expanded_query = memory_manager.expand_query(self.room_name, user_text)
+        if expanded_query != user_text:
+            logger.info(f"Multi-turn query expanded: '{user_text}' -> '{expanded_query}'")
+
+        # 5. Concurrent Sub-10ms Co-Retrieval (Moss + Local Qdrant) with OpenTelemetry
+        from agent.otel_tracer import get_tracer
+        tracer = get_tracer()
+        tracker.start_moss()
+
+        with tracer.start_as_current_span("voice_turn_co_retrieval") as span:
+            span.set_attribute("call.id", self.room_name)
+            span.set_attribute("call.vertical", self.current_vertical)
+            span.set_attribute("turn.id", self.turn_counter)
+            span.set_attribute("query.text", expanded_query)
+
+            co_res = await coordinator.concurrent_retrieve(
+                moss_call=self.moss_call,
+                vertical=self.current_vertical,
+                query=expanded_query,
+                limit=3,
+            )
+
+            span.set_attribute("retrieval.moss_ms", co_res.moss_latency_ms)
+            span.set_attribute("retrieval.qdrant_ms", co_res.qdrant_latency_ms)
+            span.set_attribute("retrieval.total_ms", co_res.total_latency_ms)
+            span.set_attribute("retrieval.is_sub_10ms", co_res.is_sub_10ms)
+            span.set_attribute("retrieval.doc_count", len(co_res.doc_ids))
+
+        tracker.finish_co_retrieval(
+            doc_ids=co_res.doc_ids,
+            snippets=co_res.snippets,
+            moss_ms=co_res.moss_latency_ms,
+            qdrant_ms=co_res.qdrant_latency_ms,
+        )
+        retrieved_text = co_res.merged_text
+
+        # 6. Dynamic Context Injection into Agent System Instructions
+        augmented_prompt = get_system_prompt(self.current_vertical, retrieved_text)
+        self.instructions = augmented_prompt
+        turn_ctx.instructions = augmented_prompt
+
+        # 7. Start LLM & TTS latency tracking
+        tracker.start_llm()
+        tracker.mark_llm_first_token()
+        tracker.start_tts()
+        tracker.mark_tts_first_byte()
+
+
 @server.rtc_session(agent_name="sub10ms-voice-agent")
 async def handle_call(ctx: JobContext) -> None:
     logger.info(f"Connecting to LiveKit room: {ctx.room.name}")
@@ -89,8 +229,12 @@ async def handle_call(ctx: JobContext) -> None:
         await moss.load_indexes(ALL_MOSS_INDEXES)
 
     # Attach Moss context to current LiveKit room session
-    call = moss.attach(ctx)
-    logger.info(f"Moss attached to room {ctx.room.name}, call_id={call.call_id}")
+    call = None
+    try:
+        call = moss.attach(ctx)
+        logger.info(f"Moss attached to room {ctx.room.name}, call_id={call.call_id}")
+    except Exception as me:
+        logger.warning(f"Moss attach notice: {me}")
 
     # Determine vertical from room metadata (default to 'dispatch')
     current_vertical = "dispatch"
@@ -152,8 +296,12 @@ async def handle_call(ctx: JobContext) -> None:
 
     # Create Voice Agent with vertical prompt
     base_instructions = get_system_prompt(current_vertical)
-    agent = Agent(
+    agent = TandemVoiceAgent(
         instructions=base_instructions,
+        current_vertical=current_vertical,
+        room_name=ctx.room.name,
+        moss_call=call,
+        room=ctx.room,
         stt=stt_instance,
         vad=vad_instance,
         llm=llm_instance,
@@ -161,142 +309,57 @@ async def handle_call(ctx: JobContext) -> None:
         allow_interruptions=True,
     )
 
-    turn_counter = 0
-    call_turns: List[str] = []
+    session = AgentSession()
 
-    session = AgentSession(
-        stt=stt_instance,
-        vad=vad_instance,
-        llm=llm_instance,
-        tts=tts_instance,
-        allow_interruptions=True,
-    )
-
-    async def broadcast_telemetry(data_dict: dict):
-        """Broadcasts telemetry packet over WebRTC data channel to dashboard."""
-        try:
-            payload = json.dumps({"type": "telemetry", "payload": data_dict}).encode("utf-8")
-            await ctx.room.local_participant.publish_data(payload, reliable=True)
-        except Exception as e:
-            logger.debug(f"Data channel broadcast notice: {e}")
-
-    @session.on("user_speech_committed")
-    def on_user_speech_committed(ev_or_text):
-        nonlocal turn_counter, current_vertical, index_name
-        turn_counter += 1
-        
-        user_text = ev_or_text if isinstance(ev_or_text, str) else getattr(ev_or_text, "text", str(ev_or_text))
-        call_turns.append(f"Caller: {user_text}")
-        logger.info(f"[Turn {turn_counter}] User said: '{user_text}'")
-
-        tracker = LatencyTracker(call_id=ctx.room.name, vertical=current_vertical, turn_id=turn_counter)
-        tracker.mark_stt_final()
-
-        async def process_turn_concurrently():
-            # 1. Safety Guardrail evaluation (<1ms)
-            guardrail_match = evaluate_guardrails(current_vertical, user_text)
-            if guardrail_match:
-                action, severity, override_msg = guardrail_match
-                logger.warning(f"GUARDRAIL TRIGGERED: [{severity}] {action} -> {override_msg}")
-                tracker.guardrail_action = f"{severity}:{action}"
-                
-                # Immediate voice override
-                await session.say(override_msg)
-                telemetry = tracker.compute(user_text, override_msg)
-                await broadcast_telemetry(telemetry.__dict__)
-                await report_telemetry(telemetry)
-                memory_manager.record_turn(ctx.room.name, turn_counter, user_text, override_msg)
-                return
-
-            # 2. Sub-50ms Edge Domain Classifier (Instant Off-Topic Refusal Bypass)
-            is_in_domain, refusal_msg = classify_edge_domain(current_vertical, user_text)
-            if not is_in_domain and refusal_msg:
-                logger.info(f"EDGE REFUSAL BYPASS (<2ms): Deflecting off-domain query: '{user_text}'")
-                tracker.guardrail_action = "EDGE_DOMAIN_REFUSAL_BYPASS"
-                await session.say(refusal_msg)
-                telemetry = tracker.compute(user_text, refusal_msg)
-                await broadcast_telemetry(telemetry.__dict__)
-                await report_telemetry(telemetry)
-                memory_manager.record_turn(ctx.room.name, turn_counter, user_text, refusal_msg)
-                return
-
-            # 3. Optional Voice Backchanneling for complex inquiries
-            backchannel_phrase = get_backchannel_phrase(current_vertical, user_text)
-            if backchannel_phrase:
-                asyncio.create_task(session.say(backchannel_phrase))
-
-            # 4. Multi-Turn Query Rewriting for Context Expansion
-            expanded_query = memory_manager.expand_query(ctx.room.name, user_text)
-            if expanded_query != user_text:
-                logger.info(f"Multi-turn query expanded: '{user_text}' -> '{expanded_query}'")
-
-            # 5. Concurrent Sub-10ms Co-Retrieval (Moss + Local Qdrant) with OpenTelemetry
-            from agent.otel_tracer import get_tracer
-            tracer = get_tracer()
-            tracker.start_moss()
-
-            with tracer.start_as_current_span("voice_turn_co_retrieval") as span:
-                span.set_attribute("call.id", ctx.room.name)
-                span.set_attribute("call.vertical", current_vertical)
-                span.set_attribute("turn.id", turn_counter)
-                span.set_attribute("query.text", expanded_query)
-
-                co_res = await coordinator.concurrent_retrieve(
-                    moss_call=call,
-                    vertical=current_vertical,
-                    query=expanded_query,
-                    limit=3,
+    @session.on("user_input_transcribed")
+    def on_user_input_transcribed(ev: UserInputTranscribedEvent):
+        if ev.transcript:
+            if ev.is_final:
+                logger.info(f"STT final: '{ev.transcript}'")
+            else:
+                logger.debug(f"STT interim: '{ev.transcript}'")
+            asyncio.create_task(
+                agent.broadcast_event(
+                    "live_user_speech",
+                    {"text": ev.transcript, "is_final": ev.is_final},
                 )
-
-                span.set_attribute("retrieval.moss_ms", co_res.moss_latency_ms)
-                span.set_attribute("retrieval.qdrant_ms", co_res.qdrant_latency_ms)
-                span.set_attribute("retrieval.total_ms", co_res.total_latency_ms)
-                span.set_attribute("retrieval.is_sub_10ms", co_res.is_sub_10ms)
-                span.set_attribute("retrieval.doc_count", len(co_res.doc_ids))
-
-            tracker.finish_co_retrieval(
-                doc_ids=co_res.doc_ids,
-                snippets=co_res.snippets,
-                moss_ms=co_res.moss_latency_ms,
-                qdrant_ms=co_res.qdrant_latency_ms,
             )
-            retrieved_text = co_res.merged_text
 
-            # 6. Dynamic Context Injection into Agent
-            augmented_prompt = get_system_prompt(current_vertical, retrieved_text)
-            agent.instructions = augmented_prompt
+    @session.on("conversation_item_added")
+    def on_conversation_item_added(ev: ConversationItemAddedEvent):
+        if hasattr(ev.item, "role") and ev.item.role == "assistant" and agent.current_tracker:
+            agent_text = ev.item.text_content or ""
+            if not agent_text:
+                return
+            agent.call_turns.append(f"Tandem: {agent_text}")
+            tracker = agent.current_tracker
+            agent.current_tracker = None
+            user_text = agent.call_turns[-2].replace("Caller: ", "") if len(agent.call_turns) >= 2 else ""
+            telemetry = tracker.compute(user_text, agent_text)
+            memory_manager.record_turn(
+                agent.room_name,
+                agent.turn_counter,
+                user_text,
+                agent_text,
+                tracker.retrieved_doc_ids,
+            )
+            asyncio.create_task(agent.broadcast_telemetry(telemetry.__dict__))
+            asyncio.create_task(report_telemetry(telemetry))
 
-            # 7. Generate LLM reply
-            tracker.start_llm()
-            tracker.mark_llm_first_token()
-            tracker.start_tts()
-            tracker.mark_tts_first_byte()
-
-            # Trigger agent response
-            reply_handle = await session.generate_reply()
-            
-            # 8. Record in multi-turn memory & telemetry
-            telemetry = tracker.compute(user_text, "Response synthesized with retrieved SOP context.")
-            memory_manager.record_turn(ctx.room.name, turn_counter, user_text, "Response synthesized with SOP", doc_ids)
-            await broadcast_telemetry(telemetry.__dict__)
-            await report_telemetry(telemetry)
-
-        # Launch turn processing task
-        asyncio.create_task(process_turn_concurrently())
-
-    # Handle incoming data channel messages (e.g., dynamic vertical switching from dashboard)
+    # Handle incoming data channel messages (e.g., dynamic vertical switching or barge-in from dashboard)
     @ctx.room.on("data_received")
     def on_data_received(data_packet):
-        nonlocal current_vertical, index_name
         try:
             msg = json.loads(data_packet.data.decode("utf-8"))
             if msg.get("type") == "set_vertical":
                 new_vert = msg.get("vertical")
                 if new_vert in VERTICAL_INDEX_MAP:
-                    current_vertical = new_vert
-                    index_name = VERTICAL_INDEX_MAP[new_vert]
-                    agent.instructions = get_system_prompt(current_vertical)
-                    logger.info(f"Dynamically switched active vertical to: {current_vertical}")
+                    agent.current_vertical = new_vert
+                    agent.instructions = get_system_prompt(new_vert)
+                    logger.info(f"Dynamically switched active vertical to: {new_vert}")
+            elif msg.get("type") == "barge_in":
+                logger.info("Barge-in requested from user dashboard")
+                session.interrupt()
         except Exception as e:
             logger.debug(f"Error handling room data packet: {e}")
 
@@ -306,21 +369,17 @@ async def handle_call(ctx: JobContext) -> None:
     # ---- Post-call structured output extraction ----
     session_start_time = time.time()
 
-    @session.on("agent_state_changed")
-    def _on_state_change(old_state, new_state):
-        pass  # reserved for future state logging
-
     async def _extract_on_disconnect():
-        """Fires after the session disconnects to run Gemini extraction."""
+        """Fires after the session disconnects to run Gemini extraction and Zero-Trust reflection."""
         try:
             from agent.structured_outputs import run_extraction_for_call
             from server.db import get_custom_schemas_for_vertical, store_extraction_results
             duration = time.time() - session_start_time
-            custom_schemas = get_custom_schemas_for_vertical(current_vertical)
+            custom_schemas = get_custom_schemas_for_vertical(agent.current_vertical)
             results = await run_extraction_for_call(
                 call_id=ctx.room.name,
-                vertical=current_vertical,
-                message_count=turn_counter,
+                vertical=agent.current_vertical,
+                message_count=agent.turn_counter,
                 call_duration_seconds=duration,
                 ended_reason="agent-ended-call",
                 custom_schemas=custom_schemas,
@@ -333,11 +392,11 @@ async def handle_call(ctx: JobContext) -> None:
 
         # Post-call Zero-Trust Reflection & Dynamic Fact Extraction
         try:
-            full_transcript = "\n".join(call_turns)
+            full_transcript = "\n".join(agent.call_turns)
             if full_transcript:
                 await process_post_call_reflection(
                     call_id=ctx.room.name,
-                    vertical=current_vertical,
+                    vertical=agent.current_vertical,
                     full_transcript=full_transcript,
                 )
         except Exception as re:
@@ -356,7 +415,7 @@ async def handle_call(ctx: JobContext) -> None:
         "logistics_fleet": "RouteMaster fleet coordinator online. Ready for hours of service or reefer status.",
         "financial_compliance": "VaultGuard compliance active. Ready for transaction inquiry.",
     }
-    greeting_text = greetings.get(current_vertical, "Tandem voice agent connected. How can I assist you?")
+    greeting_text = greetings.get(agent.current_vertical, "Tandem voice agent connected. How can I assist you?")
     try:
         await session.say(greeting_text)
     except Exception as e:

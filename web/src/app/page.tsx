@@ -7,10 +7,11 @@ import { LatencyWaterfall } from "@/components/LatencyWaterfall";
 import { VoiceRoom } from "@/components/VoiceRoom";
 import { TranscriptViewer } from "@/components/TranscriptViewer";
 import { KnowledgeInspector } from "@/components/KnowledgeInspector";
-import { SimulationBench } from "@/components/SimulationBench";
 import { Vertical, TurnTelemetry } from "@/lib/types";
 import { fetchVerticals, mintLiveKitToken } from "@/lib/api";
-import { PhoneCall, Radio, Sparkles, Activity } from "lucide-react";
+import { CharacterAvatar } from "@/components/CharacterAvatar";
+import { getAgentCharacter } from "@/lib/personas";
+import { PhoneCall, Radio } from "lucide-react";
 
 export default function DashboardPage() {
   const [verticals, setVerticals] = useState<Vertical[]>([]);
@@ -41,7 +42,7 @@ export default function DashboardPage() {
       if (resp.url) setLiveKitUrl(resp.url);
     } catch (err) {
       console.error("Failed to start call:", err);
-      alert("Failed to connect to LiveKit. Please ensure control plane is running on http://localhost:8000");
+      alert("Failed to connect to voice session. Please ensure control plane is running on http://localhost:8000");
     } finally {
       setIsConnecting(false);
     }
@@ -62,6 +63,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-dark-bg">
       {/* Header */}
       <Header
+        activeVerticalId={activeVerticalId}
         activeVerticalName={activeVertical?.name || "Dispatch Operations"}
         isCallActive={Boolean(liveToken)}
       />
@@ -87,32 +89,56 @@ export default function DashboardPage() {
             onTelemetryReceived={handleNewTelemetry}
             activeVertical={activeVerticalId}
           />
-        ) : (
-          <div className="bg-dark-card border border-dark-border rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-            <div className="flex items-center space-x-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-dark-mint/10 border border-dark-mint/30 text-dark-mint flex items-center justify-center flex-shrink-0">
-                <Radio className="w-6 h-6 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-dark-cream flex items-center gap-2">
-                  Launch Live WebRTC Voice Session
-                </h3>
-                <p className="text-xs text-dark-muted">
-                  Connect microphone for full-duplex conversational voice with sub-10ms Moss + Qdrant co-retrieval and Groq LLM streaming.
-                </p>
-              </div>
-            </div>
+        ) : (() => {
+          const character = getAgentCharacter(activeVerticalId);
+          return (
+            <div className="bg-dark-card border border-dark-border rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-5 shadow-xl relative overflow-hidden">
+              <div
+                className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-15"
+                style={{ backgroundColor: character.accentColor }}
+              />
 
-            <button
-              onClick={handleStartCall}
-              disabled={isConnecting}
-              className="px-6 py-3 rounded-xl bg-dark-cream hover:bg-white text-[#0e0e13] font-bold text-xs uppercase tracking-wider flex items-center space-x-2 transition-all shadow-lg shadow-black/40 hover:shadow-black/60 disabled:opacity-50"
-            >
-              <PhoneCall className="w-4 h-4 text-[#0e0e13]" />
-              <span>{isConnecting ? "Connecting SFU..." : "Start Live Voice Call"}</span>
-            </button>
-          </div>
-        )}
+              <div className="flex items-center space-x-4">
+                <CharacterAvatar
+                  verticalId={activeVerticalId}
+                  size="lg"
+                  showBadge={true}
+                />
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-base font-bold text-dark-cream flex items-center gap-2">
+                      <span>Connect with {character.characterName}</span>
+                    </h3>
+                    <span
+                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded border border-white/10"
+                      style={{
+                        backgroundColor: `${character.accentColor}18`,
+                        color: character.accentColor,
+                      }}
+                    >
+                      {character.callsign}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#a1a1aa] mt-0.5">
+                    <span className="text-white font-medium">{character.roleTitle}</span> &bull; {character.department}
+                  </p>
+                  <p className="text-xs text-[#9acdbf] mt-1 italic line-clamp-1">
+                    &quot;{character.greeting}&quot;
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleStartCall}
+                disabled={isConnecting}
+                className="px-6 py-3 rounded-xl bg-dark-cream hover:bg-white text-[#0e0e13] font-bold text-xs uppercase tracking-wider flex items-center space-x-2 transition-all shadow-lg shadow-black/40 hover:shadow-black/60 disabled:opacity-50 flex-shrink-0"
+              >
+                <PhoneCall className="w-4 h-4 text-[#0e0e13]" />
+                <span>{isConnecting ? "Connecting..." : `Start Call with ${character.characterName}`}</span>
+              </button>
+            </div>
+          );
+        })()}
 
         {/* 3. Sub-10ms Latency Waterfall Widget */}
         <LatencyWaterfall telemetry={currentTelemetry} />
@@ -122,17 +148,11 @@ export default function DashboardPage() {
           <TranscriptViewer turns={turnHistory} />
           <KnowledgeInspector vertical={activeVertical} />
         </div>
-
-        {/* 5. Zero-Mic Real-Time Simulation Bench */}
-        <SimulationBench
-          vertical={activeVertical}
-          onSimulationComplete={handleNewTelemetry}
-        />
       </main>
 
       {/* Footer */}
       <footer className="border-t border-dark-border py-4 text-center text-xs text-dark-muted font-mono">
-        Sub-10ms Context Retrieval Voice Agents &bull; Tandem Monorepo &bull; LiveKit + Moss + Qdrant + Groq + OpenTelemetry
+        Tandem Operations Center
       </footer>
     </div>
   );

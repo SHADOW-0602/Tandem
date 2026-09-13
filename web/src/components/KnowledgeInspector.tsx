@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { KnowledgeDoc, Vertical } from "@/lib/types";
 import { fetchKnowledge } from "@/lib/api";
 import { BookOpen, ShieldAlert, FileText, Search, Clock, Check, X, Sparkles, PlusCircle } from "lucide-react";
+import { CharacterAvatar } from "./CharacterAvatar";
+import { getAgentCharacter } from "@/lib/personas";
 
 interface KnowledgeInspectorProps {
   vertical: Vertical | null;
@@ -130,7 +132,7 @@ export const KnowledgeInspector: React.FC<KnowledgeInspectorProps> = ({ vertical
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Live Vector Test</span>
+            <span>Context Search</span>
           </button>
 
           <button
@@ -161,9 +163,22 @@ export const KnowledgeInspector: React.FC<KnowledgeInspectorProps> = ({ vertical
           </button>
         </div>
 
-        <span className="text-[10px] font-mono text-[#62f6b5] bg-[#0d241e] px-2 py-0.5 rounded border border-[#62f6b5]/30">
-          {vertical.moss_index}
-        </span>
+        {(() => {
+          const character = getAgentCharacter(vertical.id);
+          return (
+            <div className="flex items-center space-x-2 pl-2 border-l border-white/[0.08]">
+              <CharacterAvatar verticalId={vertical.id} size="sm" />
+              <div className="hidden sm:flex flex-col text-right">
+                <span className="text-[11px] font-bold text-[#fffaea] leading-tight">
+                  {character.characterName}
+                </span>
+                <span className="text-[9px] font-mono text-[#a1a1aa]">
+                  {character.callsign}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Tab 1: SOP Master Detail List */}
@@ -312,7 +327,7 @@ export const KnowledgeInspector: React.FC<KnowledgeInspectorProps> = ({ vertical
                     className="px-2.5 py-1 rounded bg-[#62f6b5] hover:bg-[#82f8c4] text-black font-semibold text-[11px] flex items-center space-x-1"
                   >
                     <Check className="w-3 h-3" />
-                    <span>Approve to Qdrant</span>
+                    <span>Approve to Knowledge Base</span>
                   </button>
                 </div>
               </div>

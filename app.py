@@ -1,4 +1,4 @@
-﻿import os
+import os
 import subprocess
 import threading
 import gradio as gr
@@ -25,4 +25,4 @@ with gr.Blocks(title="Tandem Voice Worker") as demo:
     refresh_btn.click(fn=check_status, outputs=status_box)
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7860, ssr_mode=False)

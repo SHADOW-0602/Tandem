@@ -49,7 +49,11 @@ class LocalQdrantEngine:
         else:
             storage_dir = Path(self.storage_path)
             storage_dir.mkdir(parents=True, exist_ok=True)
-            self.client = QdrantClient(path=str(storage_dir))
+            try:
+                self.client = QdrantClient(path=str(storage_dir))
+            except Exception as le:
+                logger.warning(f"File storage lock detected ({le}), using in-memory Qdrant client fallback.")
+                self.client = QdrantClient(":memory:")
 
         # Prewarm FastEmbed ONNX embedding model into memory
         logger.info(f"Loading FastEmbed model '{self.model_name}'...")

@@ -24,7 +24,12 @@ try:
 except ImportError:
     HAS_OPENAI = False
 
-from moss_agent import MossAgent
+try:
+    from moss_agent import MossAgent
+    HAS_MOSS = True
+except ImportError:
+    HAS_MOSS = False
+    MossAgent = None
 
 from agent.config import (
     LIVEKIT_URL,
@@ -56,17 +61,20 @@ server = AgentServer()
 def prewarm(proc: JobProcess) -> None:
     """Prewarms all vertical indexes into the hot in-memory Moss cache on worker startup."""
     logger.info("Initializing prewarmed MossAgent in worker process...")
-    moss = MossAgent(
-        project_id=MOSS_PROJECT_ID,
-        project_key=MOSS_PROJECT_KEY,
-    )
-    
-    # Load and cache all consolidated indexes
-    logger.info(f"Loading indexes into local hot cache: {ALL_MOSS_INDEXES}")
-    asyncio.run(moss.load_indexes(ALL_MOSS_INDEXES))
-    logger.info("Sub-10ms Moss hot cache successfully prewarmed!")
-    
-    proc.userdata["moss_agent"] = moss
+    if HAS_MOSS and MossAgent:
+        try:
+            moss = MossAgent(
+                project_id=MOSS_PROJECT_ID,
+                project_key=MOSS_PROJECT_KEY,
+            )
+            logger.info(f"Loading indexes into local hot cache: {ALL_MOSS_INDEXES}")
+            asyncio.run(moss.load_indexes(ALL_MOSS_INDEXES))
+            logger.info("Sub-10ms Moss hot cache successfully prewarmed!")
+            proc.userdata["moss_agent"] = moss
+        except Exception as me:
+            logger.warning(f"Moss prewarm notice: {me}")
+    else:
+        logger.info("Running in pure local Qdrant knowledge mode (MossAgent skipped).")
 
     # Prewarm local embedded Qdrant with FastEmbed
     try:
@@ -225,19 +233,23 @@ async def handle_call(ctx: JobContext) -> None:
     logger.info(f"Connecting to LiveKit room: {ctx.room.name}")
     await ctx.connect()
 
-    moss: MossAgent = ctx.proc.userdata.get("moss_agent")
-    if not moss:
-        logger.warning("MossAgent missing in userdata, instantiating fallback...")
-        moss = MossAgent(project_id=MOSS_PROJECT_ID, project_key=MOSS_PROJECT_KEY)
-        await moss.load_indexes(ALL_MOSS_INDEXES)
-
-    # Attach Moss context to current LiveKit room session
     call = None
-    try:
-        call = moss.attach(ctx)
-        logger.info(f"Moss attached to room {ctx.room.name}, call_id={call.call_id}")
-    except Exception as me:
-        logger.warning(f"Moss attach notice: {me}")
+    if HAS_MOSS and MossAgent:
+        moss: Any = ctx.proc.userdata.get("moss_agent")
+        if not moss:
+            try:
+                moss = MossAgent(project_id=MOSS_PROJECT_ID, project_key=MOSS_PROJECT_KEY)
+                await moss.load_indexes(ALL_MOSS_INDEXES)
+            except Exception as me:
+                logger.warning(f"MossAgent fallback notice: {me}")
+                moss = None
+
+        if moss:
+            try:
+                call = moss.attach(ctx)
+                logger.info(f"Moss attached to room {ctx.room.name}, call_id={call.call_id}")
+            except Exception as me:
+                logger.warning(f"Moss attach notice: {me}")
 
     # Determine vertical from room metadata (default to 'dispatch')
     current_vertical = "dispatch"

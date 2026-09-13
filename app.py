@@ -14,7 +14,7 @@ def run_agent_worker():
     except Exception as e:
         print(f"FastEmbed prewarm notice: {e}")
 
-    subprocess.run(["python", "-m", "agent.worker", "start", "--num-idle-processes", "1"])
+    subprocess.run(["python", "-m", "agent.worker", "start"])
 
 # Start the LiveKit voice agent daemon in a background thread
 thread = threading.Thread(target=run_agent_worker, daemon=True)

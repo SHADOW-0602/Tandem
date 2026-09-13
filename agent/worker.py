@@ -164,9 +164,12 @@ class TandemVoiceAgent(Agent):
             raise StopResponse()
 
         # 3. Optional Voice Backchanneling for complex inquiries
-        backchannel_phrase = get_backchannel_phrase(self.current_vertical, user_text)
-        if backchannel_phrase:
-            asyncio.create_task(self.session.say(backchannel_phrase))
+        # Note: In LiveKit 1.8+, calling session.say() inside on_user_turn_completed
+        # adds an assistant response to chat_ctx and cancels the pending LLM response.
+        # We disable session.say() here so the LLM full response generates properly.
+        # backchannel_phrase = get_backchannel_phrase(self.current_vertical, user_text)
+        # if backchannel_phrase:
+        #     asyncio.create_task(self.session.say(backchannel_phrase))
 
         # 4. Multi-Turn Query Rewriting for Context Expansion
         expanded_query = memory_manager.expand_query(self.room_name, user_text)

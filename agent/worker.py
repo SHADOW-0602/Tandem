@@ -6,7 +6,7 @@ import sys
 import time
 from typing import Optional, List, Any
 
-from livekit.agents import AgentServer, JobContext, JobProcess, llm
+from livekit.agents import AgentServer, JobContext, JobProcess, JobExecutorType, llm
 from livekit.agents.voice import AgentSession, Agent, ConversationItemAddedEvent, UserInputTranscribedEvent
 from livekit.agents.llm.tool_context import StopResponse
 from livekit.plugins import silero, groq
@@ -56,7 +56,11 @@ from agent.reflection import process_post_call_reflection
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("agent.worker")
 
-server = AgentServer()
+server = AgentServer(
+    job_executor_type=JobExecutorType.THREAD,
+    initialize_process_timeout=30.0,
+    num_idle_processes=1,
+)
 
 def prewarm(proc: JobProcess) -> None:
     """Prewarms all vertical indexes into the hot in-memory Moss cache on worker startup."""

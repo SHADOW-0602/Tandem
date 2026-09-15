@@ -7,9 +7,10 @@ import { LatencyWaterfall } from "@/components/LatencyWaterfall";
 import { VoiceRoom } from "@/components/VoiceRoom";
 import { TranscriptViewer } from "@/components/TranscriptViewer";
 import { Vertical, TurnTelemetry } from "@/lib/types";
-import { fetchVerticals, mintLiveKitToken } from "@/lib/api";
+import { fetchVerticals, mintLiveKitToken, simulateTurn } from "@/lib/api";
 import { CharacterAvatar } from "@/components/CharacterAvatar";
 import { getAgentCharacter, AGENT_CHARACTERS } from "@/lib/personas";
+import { getNextCallerQuestion, getCallerQuestions } from "@/lib/simulationQuestions";
 import {
   PhoneCall,
   Zap,
@@ -42,6 +43,9 @@ export default function DashboardPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentTelemetry, setCurrentTelemetry] = useState<TurnTelemetry | null>(null);
   const [turnHistory, setTurnHistory] = useState<TurnTelemetry[]>([]);
+  const [liveSpeech, setLiveSpeech] = useState<string>("");
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [simulatedQuestionIndices, setSimulatedQuestionIndices] = useState<Record<string, number>>({});
 
   // Load verticals on mount
   useEffect(() => {
@@ -52,32 +56,64 @@ export default function DashboardPage() {
     });
   }, []);
 
-  const activeVertical = verticals.find((v) => v.id === activeVerticalId) || verticals[0] || DEFAULT_VERTICALS[0];
+  const activeVertical = verticals.find((v) => v.id === activeVerticalId);
 
-  // Start live voice call
+  // Mint LiveKit token and connect to room
   const handleStartCall = async () => {
+    if (isConnecting) return;
     setIsConnecting(true);
     try {
-      const resp = await mintLiveKitToken(undefined, activeVerticalId);
-      setLiveToken(resp.token);
-      if (resp.url) setLiveKitUrl(resp.url);
+      const roomName = `room-${activeVerticalId}-${Date.now()}`;
+      const data = await mintLiveKitToken(roomName, activeVerticalId);
+      setLiveToken(data.token);
+      if (data.url) setLiveKitUrl(data.url);
     } catch (err) {
-      console.error("Failed to start call:", err);
-      alert("Failed to connect to voice session. Please ensure control plane is active.");
+      console.error("Failed to start voice call:", err);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  // Hang up
+  // Disconnect from voice room
   const handleEndCall = () => {
     setLiveToken(null);
+    setLiveSpeech("");
   };
 
   // Handle telemetry turn from voice agent
   const handleNewTelemetry = (telemetry: TurnTelemetry) => {
     setCurrentTelemetry(telemetry);
     setTurnHistory((prev) => [telemetry, ...prev]);
+    setLiveSpeech("");
+  };
+
+  // Quick 1-click simulation of a domain turn (cycles through a new question every single time)
+  const handleSimulateSample = async (customPrompt?: string) => {
+    setIsSimulating(true);
+    const currentIndex = simulatedQuestionIndices[activeVerticalId] || 0;
+    const { question, nextIndex } = getNextCallerQuestion(activeVerticalId, currentIndex);
+    const text = customPrompt || question.prompt;
+
+    // Immediately stream the caller's speech into the live transcript
+    setLiveSpeech(text);
+
+    // Advance the question index so the next simulate click asks the next question
+    setSimulatedQuestionIndices((prev) => ({
+      ...prev,
+      [activeVerticalId]: nextIndex,
+    }));
+
+    try {
+      const telemetry = await simulateTurn(activeVerticalId, text);
+      if (telemetry) {
+        handleNewTelemetry(telemetry);
+      }
+    } catch (err) {
+      console.error("Failed to run simulated turn:", err);
+      setLiveSpeech("");
+    } finally {
+      setIsSimulating(false);
+    }
   };
 
   const scrollToSection = (id: string) => {
@@ -324,6 +360,7 @@ export default function DashboardPage() {
                   serverUrl={liveKitUrl}
                   onDisconnect={handleEndCall}
                   onTelemetryReceived={handleNewTelemetry}
+                  onLiveSpeech={setLiveSpeech}
                   activeVertical={activeVerticalId}
                 />
               ) : (() => {
@@ -414,9 +451,16 @@ export default function DashboardPage() {
               })()}
             </div>
 
-            {/* Right Column: Live Conversation & Context Stream */}
+            {/* Right Column: Live Conversation */}
             <div className="h-full">
-              <TranscriptViewer turns={turnHistory} />
+              <TranscriptViewer
+                turns={turnHistory}
+                liveSpeech={liveSpeech}
+                isCallActive={Boolean(liveToken)}
+                activeVerticalId={activeVerticalId}
+                onSimulateSample={handleSimulateSample}
+                isSimulating={isSimulating}
+              />
             </div>
           </div>
         </div>

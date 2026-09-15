@@ -19,6 +19,7 @@ interface VoiceRoomProps {
   serverUrl: string;
   onDisconnect: () => void;
   onTelemetryReceived: (telemetry: TurnTelemetry) => void;
+  onLiveSpeech?: (speech: string) => void;
   activeVertical: string;
 }
 
@@ -27,6 +28,7 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({
   serverUrl,
   onDisconnect,
   onTelemetryReceived,
+  onLiveSpeech,
   activeVertical,
 }) => {
   if (!token) return null;
@@ -44,6 +46,7 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({
       <VoiceRoomInner
         onDisconnect={onDisconnect}
         onTelemetryReceived={onTelemetryReceived}
+        onLiveSpeech={onLiveSpeech}
         activeVertical={activeVertical}
       />
       <RoomAudioRenderer />
@@ -54,8 +57,9 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({
 const VoiceRoomInner: React.FC<{
   onDisconnect: () => void;
   onTelemetryReceived: (telemetry: TurnTelemetry) => void;
+  onLiveSpeech?: (speech: string) => void;
   activeVertical: string;
-}> = ({ onDisconnect, onTelemetryReceived, activeVertical }) => {
+}> = ({ onDisconnect, onTelemetryReceived, onLiveSpeech, activeVertical }) => {
   const room = useRoomContext();
   const connectionState = useConnectionState();
   const { localParticipant, isMicrophoneEnabled } = useLocalParticipant();
@@ -81,12 +85,15 @@ const VoiceRoomInner: React.FC<{
         if (data.type === "telemetry" && data.payload) {
           onTelemetryReceived(data.payload as TurnTelemetry);
           setLiveSpeech("");
+          if (onLiveSpeech) onLiveSpeech("");
         } else if (data.type === "live_user_speech" && data.payload) {
           const spokenText = data.payload.text || "";
           setLiveSpeech(spokenText);
+          if (onLiveSpeech) onLiveSpeech(spokenText);
           if (data.payload.is_final) {
             setTimeout(() => {
               setLiveSpeech((prev) => (prev === spokenText ? "" : prev));
+              if (onLiveSpeech) onLiveSpeech("");
             }, 3000);
           }
         }
@@ -99,7 +106,7 @@ const VoiceRoomInner: React.FC<{
     return () => {
       room.off(RoomEvent.DataReceived, handleDataReceived);
     };
-  }, [room, onTelemetryReceived]);
+  }, [room, onTelemetryReceived, onLiveSpeech]);
 
   // Toggle Microphone
   const toggleMic = async () => {

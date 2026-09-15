@@ -91,7 +91,17 @@ async def trigger_evals():
 async def simulate_turn(req: SimulationRequest):
     """Simulates an end-to-end voice turn measuring real Moss retrieval and LLM TTFT."""
     vertical = req.vertical
-    text = req.text
+    text = (req.text or "").strip()
+    if not text or text.lower() in ("auto", "next", "random"):
+        from server.routes.verticals import VERTICAL_METADATA
+        meta = VERTICAL_METADATA.get(vertical)
+        prompts = meta.get("sample_prompts", []) if meta else []
+        if prompts:
+            import random
+            text = random.choice(prompts)
+        else:
+            text = "Operational status report requested for active coordinates."
+            
     index_name = VERTICAL_INDEX_MAP.get(vertical, "dispatch_emergency_ops")
     
     t_start = time.perf_counter()

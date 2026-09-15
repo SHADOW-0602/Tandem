@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Vertical, TurnTelemetry } from "@/lib/types";
 import { simulateTurn, fetchScenarios, fetchPersonalities, runAITesterSimulation } from "@/lib/api";
+import { getCallerQuestions } from "@/lib/simulationQuestions";
 import { Play, Sparkles, Send, Loader2, Bot, User, CheckCircle2, XCircle, ChevronRight, SlidersHorizontal } from "lucide-react";
 
 interface SimulationBenchProps {
@@ -175,24 +176,31 @@ export const SimulationBench: React.FC<SimulationBenchProps> = ({
       {mode === "quick" && (
         <div>
           {/* Suggested Quick-Test Prompts */}
-          {vertical?.sample_prompts && vertical.sample_prompts.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {vertical.sample_prompts.map((prompt, idx) => (
-                <button
-                  key={idx}
-                  disabled={loading}
-                  onClick={() => {
-                    setInputText(prompt);
-                    handleSimulate(prompt);
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-dark-bg/80 border border-dark-border hover:border-dark-mint/50 hover:bg-dark-card text-dark-cream/80 text-xs text-left transition-all flex items-center space-x-1.5 shadow-sm disabled:opacity-50"
-                >
-                  <Play className="w-3 h-3 text-dark-mint flex-shrink-0" />
-                  <span className="line-clamp-1">{prompt}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {(() => {
+            const prompts =
+              vertical?.sample_prompts && vertical.sample_prompts.length > 0
+                ? vertical.sample_prompts
+                : getCallerQuestions(vertical?.id || "dispatch").map((q) => q.prompt);
+
+            return (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {prompts.map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    disabled={loading}
+                    onClick={() => {
+                      setInputText(prompt);
+                      handleSimulate(prompt);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-dark-bg/80 border border-dark-border hover:border-dark-mint/50 hover:bg-dark-card text-dark-cream/80 text-xs text-left transition-all flex items-center space-x-1.5 shadow-sm disabled:opacity-50"
+                  >
+                    <Play className="w-3 h-3 text-dark-mint flex-shrink-0" />
+                    <span className="line-clamp-1">{prompt}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
 
           {/* Custom Utterance Input Bar */}
           <div className="flex items-center space-x-2">

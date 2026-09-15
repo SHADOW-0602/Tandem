@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-# Tandem — Sub-10ms Context Retrieval Voice Platform
-
-### Ultra-Low Latency Conversational Voice AI with Self-Updating Zero-Trust Knowledge & Multi-Persona Operations
-
-=======
 ---
 title: Tandem Voice Operations Platform
 emoji: 🎙️
@@ -19,8 +13,7 @@ pinned: false
 
 ### Ultra-Low Latency Conversational Voice AI with Self-Updating Zero-Trust Knowledge & Multi-Persona Operations
 
->>>>>>> 8a0a4eb9352ce0974379c8d86cc35eafe260263f
-> **Core Stack:** Moss (`moss-agent`) & Local Embedded Qdrant (`fastembed`), LiveKit Cloud & Agents SDK (Python), Next.js 14, Dual Control-Plane (FastAPI + Laravel 11), Groq LPU (Llama 3.1/3.3), Groq Whisper Turbo STT, Cartesia Sonic TTS, OpenTelemetry, Neon PostgreSQL.
+> **Core Stack:** Moss (`moss-agent`) & Local Embedded Qdrant (`fastembed`), LiveKit Cloud & Agents SDK (Python), Next.js 14, Dual Control-Plane (FastAPI + Laravel 11), Groq LPU (`groq/compound-mini` / Llama 3.3), Groq Whisper Turbo STT, Cartesia Sonic TTS, OpenTelemetry, Neon PostgreSQL.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -74,7 +67,7 @@ Python Agent Worker (LiveKit Agents 1.8+)
  ├── Parallel Knowledge Coordinator (asyncio.gather)
  │     ├── Moss Context Engine (sub-10ms hot cache for core SOPs)
  │     └── Local Embedded Qdrant (FastEmbed ONNX ~5ms for dynamic facts)
- ├── Streaming LLM (Groq Llama 3.1 8B Instant — sub-180ms TTFT)
+ ├── Streaming LLM (Groq Compound Mini / Llama 3.3 — sub-180ms TTFT)
  ├── Streaming TTS (Cartesia Sonic 3 — sub-150ms TTFB)
  └── Zero-Overhead OpenTelemetry Tracer (Span context propagation)
        │
@@ -136,7 +129,7 @@ Total Turnaround        ~568ms  (Human-grade conversational response)
 |---|---|---|---|
 | **1. Speech Input (Groq Whisper Turbo)** | &lt; 250 ms | 240 ms | In Budget |
 | **2. Context Engine (Moss + Embedded Qdrant)** | **&lt; 10 ms** | **4.5 – 7.8 ms** | **PASS (&lt; 10ms Verified)** |
-| **3. Language Model (Groq Llama 3.1 8B TTFT)** | &lt; 180 ms | 175 ms | In Budget |
+| **3. Language Model (Groq Compound Mini TTFT)** | &lt; 180 ms | 175 ms | In Budget |
 | **4. Voice Synthesis (Cartesia Sonic TTFB)** | &lt; 150 ms | 145 ms | In Budget |
 | **Total Voice Turnaround** | **&lt; 590 ms** | **~568 ms** | **Optimal Conversational Pace** |
 
@@ -193,6 +186,8 @@ Tandem/
 └── tests/                         # Automated Test Suite (57 Test Cases)
     ├── test_dynamic_knowledge.py      # Qdrant benchmarks and TTL tests
     ├── test_zero_trust_reflection.py  # Hallucination filter & staging queue tests
+    ├── test_structured_outputs.py     # Schema validations & Gemini extraction tests
+    ├── test_moss_latency.py           # Moss context retrieval latency tests
     ├── test_otel_tracer.py            # OpenTelemetry span generation tests
     ├── test_guardrails.py             # Safety override phrase tests
     ├── test_simulation_tester.py      # AI multi-turn runner tests
@@ -238,6 +233,7 @@ LIVEKIT_API_SECRET=your_secret
 
 # AI Providers
 GROQ_API_KEY=gsk_your_groq_key
+LLM_MODEL=groq/compound-mini
 CARTESIA_API_KEY=your_cartesia_key
 GEMINI_API_KEY=your_gemini_key
 
@@ -309,19 +305,29 @@ Open **[http://localhost:3000](http://localhost:3000)** to launch the Tandem Ope
 ### FastAPI Endpoints (Port 8000)
 - `POST /api/token` — Mint a LiveKit room token with vertical claims and participant metadata.
 - `GET /api/verticals` — List all 6 domain vertical definitions, prompts, and active SOPs.
-- `GET /api/knowledge/dynamic` — Query dynamic situation facts from embedded Qdrant.
-- `POST /api/knowledge/dynamic` — Upsert a verified dynamic fact with TTL.
+- `GET /api/knowledge/list?vertical={name}` — Query active documents from embedded Qdrant.
+- `POST /api/knowledge/upsert` — Upsert a dynamic SOP or fact with optional TTL.
+- `POST /api/knowledge/search` — Benchmark vector retrieval latency in milliseconds.
+- `POST /api/knowledge/delete` — Remove an operational fact or dynamic SOP.
 - `GET /api/knowledge/staging` — List pending unverified facts awaiting HITL supervisor review.
-- `POST /api/knowledge/staging/{id}/approve` — Promote staged knowledge into Qdrant.
+- `POST /api/knowledge/staging/{id}/approve` — Promote staged knowledge into active Qdrant.
 - `POST /api/knowledge/staging/{id}/reject` — Discard flagged/hallucinated fact.
-- `GET /api/telemetry/turn-history` — Retrieve microsecond turn telemetry and stage timings.
-- `GET /api/telemetry/traces` — Export in-memory OpenTelemetry distributed spans.
+- `POST /api/simulate` — Execute simulated voice turn measuring retrieval, TTFT, and guardrails.
 - `POST /api/simulations/run` — Trigger multi-turn AI caller benchmark simulation.
-- `GET /health` — FastAPI service health and vector engine status.
+- `GET /api/telemetry/stats` — Retrieve microsecond turn telemetry and stage timings.
+- `GET /api/telemetry/traces` — Export in-memory OpenTelemetry distributed spans.
+- `GET /api/health` — FastAPI service health and vector engine status.
+- `GET /` — Root status and latency budget verification.
 
 ### Laravel 11 Endpoints (Port 8001)
 - `POST /api/token` — Enterprise JWT issuance for LiveKit WebRTC rooms.
 - `GET /api/verticals` — Fetch vertical personas and compliance definitions.
+- `GET /api/knowledge/staging` — View pending operational facts awaiting review.
+- `POST /api/knowledge/staging/{stageId}/approve` — Promote staged fact into active knowledge.
+- `POST /api/knowledge/staging/{stageId}/reject` — Reject and discard staged fact.
+- `POST /api/knowledge/search` — Query domain knowledge base.
+- `POST /api/telemetry` — Record turn metrics and latency timings.
+- `GET /api/telemetry/stats` — Aggregate platform telemetry statistics.
 - `GET /api/health` — Database connectivity and Laravel service status.
 
 ---

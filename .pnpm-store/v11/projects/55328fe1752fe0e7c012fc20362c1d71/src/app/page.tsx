@@ -451,7 +451,7 @@ export default function DashboardPage() {
               })()}
             </div>
 
-            {/* Right Column: Live Conversation */}
+            {/* Right Column: Live Conversation & Context Stream */}
             <div className="h-full">
               <TranscriptViewer
                 turns={turnHistory}

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { TurnTelemetry } from "@/lib/types";
 import { MessageSquare, Bot, User, FileText, ShieldAlert, Sparkles, ChevronDown, ChevronUp, Play, Loader2 } from "lucide-react";
@@ -32,28 +34,28 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
             <MessageSquare className="w-3 h-3 text-[#fffaea]" />
           </div>
           <h3 className="text-xs font-semibold text-[#fffaea] uppercase tracking-eyebrow">
-            Live Conversation
+            Live Conversation &amp; Context Stream
           </h3>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           {onSimulateSample && (
             <button
               onClick={onSimulateSample}
               disabled={isSimulating}
-              className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-[10px] font-mono text-[#62f6b5] flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-sm hover:border-[#62f6b5]/40"
-              title="Ask a sample question"
+              className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-[10px] font-mono text-[#62f6b5] flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
+              title="Test a simulated conversational turn against the Sub-10ms Context Engine"
             >
               {isSimulating ? (
                 <Loader2 className="w-3 h-3 animate-spin text-[#62f6b5]" />
               ) : (
                 <Play className="w-2.5 h-2.5 fill-[#62f6b5] text-[#62f6b5]" />
               )}
-              <span>{isSimulating ? "Asking..." : "Ask Question"}</span>
+              <span>{isSimulating ? "Simulating..." : "Simulate Turn"}</span>
             </button>
           )}
           <span className="text-[10px] text-[#71717a] font-mono">
-            {turns.length} message{turns.length === 1 ? "" : "s"}
+            {turns.length} Turn{turns.length === 1 ? "" : "s"} Logged
           </span>
         </div>
       </div>
@@ -72,6 +74,9 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
                   <span>Caller Speaking...</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#62f6b5] animate-ping" />
                 </span>
+                <span className="text-[10px] text-[#9acdbf] font-mono">
+                  Streaming STT
+                </span>
               </div>
               <p className="text-white font-medium italic leading-relaxed">
                 &ldquo;{liveSpeech}&rdquo;
@@ -83,25 +88,25 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
         {turns.length === 0 && !liveSpeech ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#71717a]">
             <Bot className="w-8 h-8 mb-2 stroke-1 text-[#56565a]" />
-            <p className="text-xs font-medium text-[#a1a1aa]">No messages yet</p>
+            <p className="text-xs font-medium text-[#a1a1aa]">No conversational turns yet</p>
             <p className="text-[11px] text-[#71717a] max-w-xs mt-1 mb-4">
               {isCallActive
-                ? "Listening... Speak into your microphone to talk."
-                : "Start a call on the left, or click below to ask a question."}
+                ? "Listening... Speak into your microphone to view the live conversation stream."
+                : "Start a live voice call on the left, or run a simulated turn."}
             </p>
 
             {onSimulateSample && (
               <button
                 onClick={onSimulateSample}
                 disabled={isSimulating}
-                className="px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-[#62f6b5]/30 text-[#62f6b5] font-mono text-xs flex items-center space-x-2 transition-all shadow-md disabled:opacity-50 cursor-pointer hover:border-[#62f6b5]/60"
+                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-[#62f6b5]/30 text-[#62f6b5] font-mono text-xs flex items-center space-x-2 transition-all shadow-md disabled:opacity-50 cursor-pointer hover:border-[#62f6b5]/60"
               >
                 {isSimulating ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Sparkles className="w-3.5 h-3.5 text-[#62f6b5]" />
                 )}
-                <span>{isSimulating ? "Asking..." : "Ask a Question"}</span>
+                <span>{isSimulating ? "Simulating..." : "Simulate Turn"}</span>
               </button>
             )}
           </div>

@@ -1,4 +1,4 @@
-﻿"""AI Tester and Multi-Turn Simulation Suite.
+"""AI Tester and Multi-Turn Simulation Suite.
 
 Configures an AI Tester (Scenario + Personality) to autonomously conduct
 realistic multi-turn voice conversations against Tandem agents under test,
@@ -392,10 +392,11 @@ class AITesterEngine:
         # 2. Fallback to Groq
         try:
             from groq import AsyncGroq
-            from agent.config import GROQ_API_KEY
+            from agent.config import GROQ_API_KEY, LLM_MODEL
             groq_client = AsyncGroq(api_key=GROQ_API_KEY)
+            model_name = LLM_MODEL or "groq/compound-mini"
             resp = await groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model=model_name,
                 messages=[
                     {"role": "system", "content": f"{personality_prompt}\nScenario: {scenario_instructions}"},
                     {"role": "user", "content": prompt}

@@ -204,9 +204,11 @@ Return ONLY valid JSON.
 """
     try:
         from groq import AsyncGroq
+        from agent.config import GROQ_API_KEY, LLM_MODEL
         client = AsyncGroq(api_key=GROQ_API_KEY)
+        model_name = LLM_MODEL or "groq/compound-mini"
         resp = await client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=model_name,
             messages=[
                 {"role": "system", "content": "You are a precise JSON fact extractor."},
                 {"role": "user", "content": prompt},

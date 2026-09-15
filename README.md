@@ -1,7 +1,25 @@
+<<<<<<< HEAD
 # Tandem — Sub-10ms Context Retrieval Voice Platform
 
 ### Ultra-Low Latency Conversational Voice AI with Self-Updating Zero-Trust Knowledge & Multi-Persona Operations
 
+=======
+---
+title: Tandem Voice Operations Platform
+emoji: 🎙️
+colorFrom: green
+colorTo: indigo
+sdk: gradio
+sdk_version: 6.6.0
+app_file: app.py
+pinned: false
+---
+
+# Tandem — Sub-10ms Context Retrieval Voice Platform
+
+### Ultra-Low Latency Conversational Voice AI with Self-Updating Zero-Trust Knowledge & Multi-Persona Operations
+
+>>>>>>> 8a0a4eb9352ce0974379c8d86cc35eafe260263f
 > **Core Stack:** Moss (`moss-agent`) & Local Embedded Qdrant (`fastembed`), LiveKit Cloud & Agents SDK (Python), Next.js 14, Dual Control-Plane (FastAPI + Laravel 11), Groq LPU (Llama 3.1/3.3), Groq Whisper Turbo STT, Cartesia Sonic TTS, OpenTelemetry, Neon PostgreSQL.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)

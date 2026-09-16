@@ -1,14 +1,3 @@
----
-title: Tandem Voice Operations Platform
-emoji: 🎙️
-colorFrom: green
-colorTo: indigo
-sdk: gradio
-sdk_version: 6.6.0
-app_file: app.py
-pinned: false
----
-
 # Tandem — Sub-10ms Context Retrieval Voice Platform
 
 ### Ultra-Low Latency Conversational Voice AI with Self-Updating Zero-Trust Knowledge & Multi-Persona Operations

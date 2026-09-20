@@ -9,6 +9,7 @@ import { TranscriptViewer } from "@/components/TranscriptViewer";
 import { Vertical, TurnTelemetry } from "@/lib/types";
 import { fetchVerticals, mintLiveKitToken, simulateTurn } from "@/lib/api";
 import { CharacterAvatar } from "@/components/CharacterAvatar";
+import { AgentQuestionsGuide } from "@/components/AgentQuestionsGuide";
 import { getAgentCharacter, AGENT_CHARACTERS } from "@/lib/personas";
 import { getNextCallerQuestion, getCallerQuestions } from "@/lib/simulationQuestions";
 import {
@@ -88,10 +89,11 @@ export default function DashboardPage() {
   };
 
   // Quick 1-click simulation of a domain turn (cycles through a new question every single time)
-  const handleSimulateSample = async (customPrompt?: string) => {
+  const handleSimulateSample = async (customPrompt?: string, overrideVerticalId?: string) => {
     setIsSimulating(true);
-    const currentIndex = simulatedQuestionIndices[activeVerticalId] || 0;
-    const { question, nextIndex } = getNextCallerQuestion(activeVerticalId, currentIndex);
+    const targetVerticalId = overrideVerticalId || activeVerticalId;
+    const currentIndex = simulatedQuestionIndices[targetVerticalId] || 0;
+    const { question, nextIndex } = getNextCallerQuestion(targetVerticalId, currentIndex);
     const text = customPrompt || question.prompt;
 
     // Immediately stream the caller's speech into the live transcript
@@ -100,11 +102,11 @@ export default function DashboardPage() {
     // Advance the question index so the next simulate click asks the next question
     setSimulatedQuestionIndices((prev) => ({
       ...prev,
-      [activeVerticalId]: nextIndex,
+      [targetVerticalId]: nextIndex,
     }));
 
     try {
-      const telemetry = await simulateTurn(activeVerticalId, text);
+      const telemetry = await simulateTurn(targetVerticalId, text);
       if (telemetry) {
         handleNewTelemetry(telemetry);
       }
@@ -611,6 +613,13 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* Section 6: What Type of Questions to Ask Every Agent */}
+      <AgentQuestionsGuide
+        activeVerticalId={activeVerticalId}
+        onSelectVertical={(vId) => setActiveVerticalId(vId)}
+        onTestPrompt={(vId, prompt) => handleSimulateSample(prompt, vId)}
+      />
+
       {/* Footer */}
       <footer className="border-t border-white/[0.08] bg-[#0e0e13] py-12 px-4 sm:px-6 lg:px-8 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -631,6 +640,9 @@ export default function DashboardPage() {
             </button>
             <button onClick={() => scrollToSection("architecture")} className="hover:text-white transition-colors">
               Performance
+            </button>
+            <button onClick={() => scrollToSection("questions-guide")} className="hover:text-white transition-colors text-[#62f6b5]">
+              Questions Guide
             </button>
           </div>
 

@@ -57,6 +57,12 @@ export const Header: React.FC<HeaderProps> = ({ activeVerticalId, activeVertical
             >
               Performance
             </a>
+            <a
+              href="#questions-guide"
+              className="px-3 py-1.5 rounded-lg hover:text-[#62f6b5] hover:bg-white/[0.04] transition-colors font-medium text-[#62f6b5]/90"
+            >
+              Questions Guide
+            </a>
           </nav>
 
           {/* Right: Backend Health Status & Active Persona Pill (Desktop) */}
@@ -145,6 +151,14 @@ export const Header: React.FC<HeaderProps> = ({ activeVerticalId, activeVertical
               className="px-3 py-2 rounded-lg hover:bg-white/[0.06] text-[#a1a1aa] hover:text-white transition-colors"
             >
               Performance &amp; SLA
+            </a>
+            <a
+              href="#questions-guide"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg hover:bg-white/[0.06] text-[#62f6b5] hover:text-white transition-colors flex items-center justify-between"
+            >
+              <span>Questions Guide</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#62f6b5]/10 text-[#62f6b5]">RUNBOOK</span>
             </a>
           </nav>
 

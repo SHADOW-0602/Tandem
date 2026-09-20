@@ -1,4 +1,4 @@
-﻿FROM python:3.11-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -21,7 +21,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY agent/ agent/
 COPY data/ data/
 
-# Hugging Face Spaces expects port 7860 exposed
+# Memory optimizations for 512MB/1GB environments (Render, Hugging Face)
+ENV PYTHONUNBUFFERED=1 \
+    MALLOC_ARENA_MAX=2 \
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    VECLIB_MAXIMUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1
+
+# Expose HTTP health check port
 EXPOSE 7860
 ENV PORT=7860
 

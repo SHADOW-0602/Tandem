@@ -36,8 +36,17 @@ class LocalQdrantEngine:
         self.embedder: Optional[TextEmbedding] = None
         self._is_initialized = False
 
+    def _get_embedder(self) -> TextEmbedding:
+        """Lazy-loads FastEmbed ONNX model only when embedding operations are required."""
+        if self.embedder is None:
+            t0 = time.perf_counter()
+            logger.info(f"Loading FastEmbed ONNX model '{self.model_name}' on demand...")
+            self.embedder = TextEmbedding(model_name=self.model_name)
+            logger.info(f"FastEmbed model loaded in {(time.perf_counter() - t0)*1000:.1f}ms")
+        return self.embedder
+
     def initialize(self) -> None:
-        """Initializes the Qdrant client and prewarms the FastEmbed ONNX model."""
+        """Initializes the Qdrant client and verifies collection schema (lightweight, zero ONNX bloat)."""
         if self._is_initialized:
             return
 
@@ -55,13 +64,7 @@ class LocalQdrantEngine:
                 logger.warning(f"File storage lock detected ({le}), using in-memory Qdrant client fallback.")
                 self.client = QdrantClient(":memory:")
 
-        # Prewarm FastEmbed ONNX embedding model into memory
-        logger.info(f"Loading FastEmbed model '{self.model_name}'...")
-        self.embedder = TextEmbedding(model_name=self.model_name)
-        # Warmup forward-pass
-        _ = list(self.embedder.embed(["warmup"]))
-
-        # Ensure vertical collections exist
+        # Ensure vertical collections exist (pure metadata, minimal RAM)
         distinct_verticals = set(VERTICAL_INDEX_MAP.keys())
         for vert in distinct_verticals:
             col_name = self._collection_name(vert)
@@ -77,13 +80,31 @@ class LocalQdrantEngine:
 
         self._is_initialized = True
         elapsed_ms = (time.perf_counter() - t_start) * 1000
-        logger.info(f"LocalQdrantEngine prewarmed in {elapsed_ms:.2f}ms")
+        logger.info(f"LocalQdrantEngine initialized in {elapsed_ms:.2f}ms")
 
     def _collection_name(self, vertical: str) -> str:
         return f"tandem_{vertical.lower()}"
 
+    def is_seeded(self) -> bool:
+        """Checks if all vertical collections contain seeded documents without re-embedding."""
+        if not self._is_initialized:
+            self.initialize()
+        distinct_verticals = set(VERTICAL_INDEX_MAP.keys())
+        for vert in distinct_verticals:
+            col_name = self._collection_name(vert)
+            if not self.client.collection_exists(col_name):
+                return False
+            try:
+                if self.client.count(col_name).count == 0:
+                    return False
+            except Exception:
+                return False
+        return True
+
     def seed_from_json(self, knowledge_dir: Optional[Path] = None, force_reload: bool = False) -> Dict[str, int]:
         """Seeds baseline SOPs from JSON files into local collections."""
+        import gc
+
         if not self._is_initialized:
             self.initialize()
 
@@ -121,7 +142,7 @@ class LocalQdrantEngine:
                 doc_text = f"[{item.get('vertical','').upper()} | {item.get('category','').upper()}] {item['title']}\n{item['text']}"
                 texts_to_embed.append(doc_text)
 
-            vectors = list(self.embedder.embed(texts_to_embed))
+            vectors = list(self._get_embedder().embed(texts_to_embed))
 
             for idx, (item, vec, full_text) in enumerate(zip(items, vectors, texts_to_embed)):
                 doc_id = item["id"]
@@ -149,6 +170,10 @@ class LocalQdrantEngine:
                 counts[vertical] = len(points)
                 logger.info(f"Seeded {len(points)} immutable documents into {col_name}")
 
+            # Reclaim transient memory after each vertical embedding batch
+            del points, texts_to_embed, vectors
+            gc.collect()
+
         return counts
 
     def query(
@@ -166,7 +191,7 @@ class LocalQdrantEngine:
         if not self.client.collection_exists(col_name):
             return []
 
-        q_vec = list(self.embedder.embed([query_text]))[0].tolist()
+        q_vec = list(self._get_embedder().embed([query_text]))[0].tolist()
 
         now = time.time()
         ttl_filter = models.Filter(
@@ -227,7 +252,7 @@ class LocalQdrantEngine:
             )
 
         full_text = f"[{vertical.upper()} | {category.upper()}] {title}\n{text}"
-        vec = list(self.embedder.embed([full_text]))[0].tolist()
+        vec = list(self._get_embedder().embed([full_text]))[0].tolist()
 
         now = time.time()
         expires_at = now + (ttl_hours * 3600.0) if ttl_hours else PERMANENT_EXPIRY_TS

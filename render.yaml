@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: tandem-laravel-api
     runtime: docker
@@ -25,3 +25,40 @@
         sync: false
       - key: LIVEKIT_API_SECRET
         sync: false
+
+  - type: web
+    name: tandem-voice-agent
+    runtime: docker
+    dockerfilePath: Dockerfile.agent
+    plan: free
+    region: singapore
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
+      - key: VECLIB_MAXIMUM_THREADS
+        value: "1"
+      - key: NUMEXPR_NUM_THREADS
+        value: "1"
+      - key: ENABLE_DYNAMIC_KNOWLEDGE
+        value: "true"
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+

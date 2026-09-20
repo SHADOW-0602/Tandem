@@ -58,12 +58,12 @@ logger = logging.getLogger("agent.worker")
 
 server = AgentServer(
     job_executor_type=JobExecutorType.THREAD,
-    initialize_process_timeout=30.0,
-    num_idle_processes=1,
+    initialize_process_timeout=60.0,
+    num_idle_processes=0,  # Minimize memory footprint on 512MB/1GB constrained hosts
 )
 
 def prewarm(proc: JobProcess) -> None:
-    """Prewarms all vertical indexes into the hot in-memory Moss cache on worker startup."""
+    """Prewarms indexes into memory only as needed, avoiding OOM spikes."""
     logger.info("Initializing prewarmed MossAgent in worker process...")
     if HAS_MOSS and MossAgent:
         try:
@@ -80,13 +80,23 @@ def prewarm(proc: JobProcess) -> None:
     else:
         logger.info("Running in pure local Qdrant knowledge mode (MossAgent skipped).")
 
-    # Prewarm local embedded Qdrant with FastEmbed
+    # Prewarm local embedded Qdrant (only seed if not already seeded to prevent RAM spike)
     try:
-        qdrant_engine.initialize()
-        qdrant_engine.seed_from_json(force_reload=False)
-        logger.info("Local Qdrant dynamic knowledge engine prewarmed!")
+        from agent.config import ENABLE_DYNAMIC_KNOWLEDGE
+        if ENABLE_DYNAMIC_KNOWLEDGE:
+            qdrant_engine.initialize()
+            if not qdrant_engine.is_seeded():
+                qdrant_engine.seed_from_json(force_reload=False)
+                logger.info("Local Qdrant dynamic knowledge engine seeded.")
+            else:
+                logger.info("Local Qdrant already seeded (skipped re-embedding).")
+        else:
+            logger.info("Dynamic Qdrant knowledge disabled via ENABLE_DYNAMIC_KNOWLEDGE=false.")
     except Exception as qe:
         logger.warning(f"Qdrant prewarm notice: {qe}")
+
+    import gc
+    gc.collect()
 
 server.setup_fnc = prewarm
 
@@ -440,6 +450,35 @@ async def handle_call(ctx: JobContext) -> None:
     except Exception as e:
         logger.warning(f"Initial greeting notice: {e}")
 
+def _start_lightweight_health_server():
+    """Starts a minimal stdlib HTTP server on PORT for Render/HuggingFace health checks."""
+    port_str = os.getenv("PORT")
+    if not port_str:
+        return
+    try:
+        port = int(port_str)
+        from http.server import HTTPServer, BaseHTTPRequestHandler
+        import threading
+
+        class HealthHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(b'{"status":"healthy","service":"tandem-voice-agent"}\n')
+
+            def log_message(self, format, *args):
+                pass  # Suppress health check spam
+
+        http_srv = HTTPServer(("0.0.0.0", port), HealthHandler)
+        t = threading.Thread(target=http_srv.serve_forever, daemon=True)
+        t.start()
+        logger.info(f"Lightweight HTTP health server listening on port {port}")
+    except Exception as e:
+        logger.warning(f"Could not start HTTP health server: {e}")
+
 if __name__ == "__main__":
+    _start_lightweight_health_server()
     from livekit.agents import cli
     cli.run_app(server)
